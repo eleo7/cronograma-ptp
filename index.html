@@ -1,0 +1,3773 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cronograma PTP - Mapeamento de Equipes</title>
+<style>
+  :root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-card: #0f3460;
+    --bg-hover: #1a4a7a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0b0;
+    --accent: #e94560;
+    --border: #2a2a4a;
+    --normal: #2196F3;
+    --importante: #FF9800;
+    --critico: #F44336;
+    --normal-bg: rgba(33,150,243,0.15);
+    --importante-bg: rgba(255,152,0,0.15);
+    --critico-bg: rgba(244,67,54,0.15);
+    --se-cam: #4CAF50;
+    --se-mpo: #9C27B0;
+    --se-goi: #00BCD4;
+    --se-xav: #FF5722;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--accent);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  header h1 span { color: var(--accent); }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .month-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .month-nav button {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+  }
+
+  .month-nav button:hover { background: var(--bg-hover); }
+
+  .month-nav .current-month {
+    font-size: 1rem;
+    font-weight: 600;
+    min-width: 180px;
+    text-align: center;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #d63550; }
+  .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--bg-hover); }
+  .btn-sm { padding: 4px 10px; font-size: 0.78rem; }
+
+  .main-layout {
+    display: flex;
+    height: calc(100vh - 68px);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .sidebar-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-section h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+
+  /* Equipes */
+  .team-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    background: var(--bg-card);
+    border-radius: 6px;
+    cursor: grab;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    font-size: 0.85rem;
+  }
+
+  .team-item:active { cursor: grabbing; }
+  .team-item:hover { border-color: var(--accent); background: var(--bg-hover); }
+
+  .team-item .team-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .team-item .team-name { flex: 1; }
+
+  .team-item .team-edit {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: opacity 0.2s;
+  }
+
+  .team-item:hover .team-edit { opacity: 1; }
+  .team-item .team-edit:hover { color: var(--accent); }
+
+  .team-item .team-delete {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: #f44;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: opacity 0.2s;
+  }
+
+  .team-item:hover .team-delete { opacity: 1; }
+
+  .add-team-form {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .add-team-form input {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+  }
+
+  .add-team-form input::placeholder { color: var(--text-secondary); }
+
+  /* Regiões */
+  .region-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    margin: 3px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .region-chip .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .region-chip.active { border-color: white; }
+
+  /* Tipo de Equipe */
+  .type-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    margin: 3px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .type-chip.active { border-color: white; }
+
+  .team-type-badge {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.15s;
+  }
+
+  .team-type-badge:hover { transform: scale(1.08); }
+
+  .team-type-badge[data-team-type="DEGRADAÇÃO"] { background: rgba(255,167,38,0.2); color: #FFA726; }
+  .team-type-badge[data-team-type="PODA"] { background: rgba(102,187,106,0.2); color: #66BB6A; }
+
+  /* Filter blocks */
+  .filter-block {
+    margin-bottom: 14px;
+  }
+
+  .filter-block:last-child { margin-bottom: 0; }
+
+  .filter-block-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .filter-count {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    display: inline-block;
+    margin-left: 6px;
+  }
+
+  /* Categorias */
+  .cat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .cat-item.active { border-color: white; }
+  .cat-item .cat-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* Legend */
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  .legend-item .legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+
+  /* Calendar Area */
+  .calendar-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .calendar-header-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .calendar-header-row .day-header {
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+  }
+
+  .calendar-header-row .day-header.weekend { color: var(--accent); }
+
+  .calendar-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 1fr;
+    overflow-y: auto;
+  }
+
+  .calendar-cell {
+    border: 1px solid var(--border);
+    border-right: none;
+    border-bottom: none;
+    min-height: 110px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.15s;
+    overflow: hidden;
+  }
+
+  .calendar-cell:nth-child(7n) { border-right: 1px solid var(--border); }
+
+  .calendar-cell.other-month { opacity: 0.35; }
+
+  .calendar-cell.today {
+    background: rgba(233, 69, 96, 0.08);
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+
+  .calendar-cell.drag-over {
+    background: rgba(233, 69, 96, 0.15);
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+
+  .cell-date {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 4px;
+    color: var(--text-secondary);
+  }
+
+  .calendar-cell.today .cell-date {
+    background: var(--accent);
+    color: white;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .cell-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2px 0;
+  }
+
+  .cell-items::-webkit-scrollbar { width: 3px; }
+  .cell-items::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Event Card */
+  .event-card {
+    padding: 4px 6px;
+    margin: 2px 0;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    cursor: grab;
+    border-left: 3px solid;
+    position: relative;
+    transition: all 0.15s;
+  }
+
+  .event-card:active { cursor: grabbing; }
+  .event-card:hover { filter: brightness(1.2); }
+
+  .event-card.cat-normal { background: var(--normal-bg); border-left-color: var(--normal); }
+  .event-card.cat-importante { background: var(--importante-bg); border-left-color: var(--importante); }
+  .event-card.cat-critico { background: var(--critico-bg); border-left-color: var(--critico); }
+
+  .event-card .ev-team {
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .event-card .ev-team .ev-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .event-card .ev-region {
+    font-size: 0.65rem;
+    opacity: 0.8;
+    margin-top: 1px;
+  }
+
+  .event-card .ev-desc {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .event-card .ev-delete {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    background: none;
+    border: none;
+    color: #f44;
+    cursor: pointer;
+    font-size: 0.75rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+    line-height: 1;
+  }
+
+  .event-card:hover .ev-delete { opacity: 1; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    width: 420px;
+    max-width: 95vw;
+  }
+
+  .modal h2 {
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-group select,
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+
+  .form-group textarea { resize: vertical; min-height: 60px; }
+
+  .form-group select:focus,
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 0.85rem;
+    z-index: 2000;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* Stats Bar */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-item strong { color: var(--text-primary); }
+
+  /* Context Menu */
+  .context-menu {
+    display: none;
+    position: fixed;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 0;
+    z-index: 3000;
+    min-width: 160px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .context-menu.active { display: block; }
+
+  .context-menu-item {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .context-menu-item:hover { background: var(--bg-card); }
+
+  /* Filter bar */
+  .filter-bar {
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-bar label {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-right: 4px;
+  }
+
+  /* Detail Panel */
+  .detail-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 1500;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .detail-overlay.active { display: flex; }
+
+  .detail-panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: 480px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+    animation: modalIn 0.2s ease;
+  }
+
+  @keyframes modalIn {
+    from { transform: scale(0.95) translateY(10px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-header h2 {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .detail-header-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .detail-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .detail-close:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .detail-body { padding: 20px; }
+
+  .detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-row:last-child { border-bottom: none; }
+
+  .detail-label {
+    min-width: 100px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    padding-top: 4px;
+  }
+
+  .detail-value {
+    flex: 1;
+    font-size: 0.9rem;
+  }
+
+  .detail-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .detail-badge .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .detail-desc {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    min-height: 40px;
+  }
+
+  .detail-desc.empty { font-style: italic; opacity: 0.5; }
+
+  /* Edit mode inside detail panel */
+  .detail-edit-row select,
+  .detail-edit-row input,
+  .detail-edit-row textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+
+  .detail-edit-row textarea { resize: vertical; min-height: 80px; }
+
+  .detail-edit-row select:focus,
+  .detail-edit-row input:focus,
+  .detail-edit-row textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    justify-content: flex-end;
+  }
+
+  .detail-actions .btn-danger {
+    background: #c62828;
+    color: white;
+  }
+
+  .detail-actions .btn-danger:hover { background: #b71c1c; }
+
+  /* Day Expand Modal */
+  .modal-wide {
+    width: 720px;
+    max-width: 95vw;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 88vh;
+  }
+
+  .dex-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .dex-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dex-nav button {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.15s;
+  }
+
+  .dex-nav button:hover { background: var(--bg-hover); }
+
+  .dex-nav .dex-date-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    min-width: 170px;
+    text-align: center;
+  }
+
+  .dex-nav .dex-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    display: block;
+    margin-top: 2px;
+  }
+
+  .dex-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .dex-summary {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+
+  .dex-summary strong { color: var(--text-primary); }
+
+  .dex-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--normal);
+  }
+
+  .dex-item.cat-normal { border-left-color: var(--normal); }
+  .dex-item.cat-importante {
+    border-left-color: var(--importante);
+    background: linear-gradient(to right, var(--importante-bg), transparent 40%);
+  }
+  .dex-item.cat-critico {
+    border-left-color: var(--critico);
+    background: linear-gradient(to right, var(--critico-bg), transparent 40%);
+    box-shadow: 0 0 0 1px rgba(244,67,54,0.25);
+  }
+
+  .dex-main { flex: 1; min-width: 0; }
+
+  .dex-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .dex-team {
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dex-team .dot-team {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .dex-type-badge {
+    font-size: 0.62rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .dex-region-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 14px;
+    border: 1px solid;
+  }
+
+  .dex-cat-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 14px;
+    border: 1px solid;
+    margin-left: auto;
+  }
+
+  .dex-desc {
+    background: var(--bg-primary);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.83rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-top: 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .dex-desc.empty {
+    font-style: italic;
+    opacity: 0.5;
+  }
+
+  .dex-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .dex-actions .btn { white-space: nowrap; }
+
+  .dex-empty {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-secondary);
+  }
+
+  .dex-empty .dex-empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.4; }
+
+  /* Tabs */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-secondary);
+    padding: 0 16px;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .tab {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary);
+    padding: 12px 22px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab:hover { color: var(--text-primary); }
+
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-count {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 0.7rem;
+    margin-left: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .tab.active .tab-count { color: var(--accent); }
+
+  /* Tasks View */
+  .tasks-view {
+    height: calc(100vh - 68px - 44px);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .tasks-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .tasks-toolbar h2 { font-size: 1.1rem; }
+
+  .tasks-toolbar h2 span { color: var(--accent); }
+
+  .tasks-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .status-filter { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .status-chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid transparent;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    transition: all 0.15s;
+  }
+
+  .status-chip:hover { border-color: var(--text-secondary); }
+
+  .status-chip.active { border-color: var(--text-primary); }
+
+  .tasks-columns {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    padding: 0 24px 24px;
+  }
+
+  @media (max-width: 1100px) {
+    .tasks-columns { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 700px) {
+    .tasks-columns { grid-template-columns: 1fr; }
+  }
+
+  .task-col {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .task-col-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .task-col-header .col-add {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0 4px;
+    transition: color 0.15s;
+  }
+
+  .task-col-header .col-add:hover { color: var(--accent); }
+
+  .task-col-progress {
+    height: 4px;
+    background: var(--bg-card);
+    overflow: hidden;
+  }
+
+  .task-col-progress .bar {
+    height: 100%;
+    transition: width 0.3s;
+  }
+
+  .task-col-body {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 80px;
+  }
+
+  .task-col-empty {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .task-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--text-secondary);
+    transition: all 0.15s;
+  }
+
+  .task-card:hover { filter: brightness(1.15); }
+
+  .task-card.status-pendente { border-left-color: var(--importante); }
+  .task-card.status-em_andamento { border-left-color: var(--normal); }
+  .task-card.status-concluido { border-left-color: #4CAF50; opacity: 0.75; }
+
+  .task-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--text-secondary);
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: white;
+    margin-top: 2px;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+
+  .task-check:hover { border-color: var(--accent); }
+
+  .task-card.status-concluido .task-check {
+    background: #4CAF50;
+    border-color: #4CAF50;
+  }
+
+  .task-body { flex: 1; min-width: 0; }
+
+  .task-desc {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
+  .task-card.status-concluido .task-desc {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .task-status-badge {
+    font-size: 0.68rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  .task-obs {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: 4px;
+    word-break: break-word;
+  }
+
+  .task-date {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+  }
+
+  .task-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .task-actions select {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    padding: 2px 4px;
+    cursor: pointer;
+  }
+
+  .task-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    padding: 2px 3px;
+    line-height: 1;
+  }
+
+  .task-actions button:hover { color: var(--accent); }
+  .task-actions .task-del:hover { color: #f44; }
+
+  /* Login */
+  .login-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, #0f0f1e, #1a1a2e 50%, #0f3460);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+  }
+
+  .login-overlay.active { display: flex; }
+
+  .login-box {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 34px 32px;
+    width: 360px;
+    max-width: 92vw;
+    text-align: center;
+    box-shadow: 0 16px 60px rgba(0,0,0,0.5);
+    animation: modalIn 0.25s ease;
+  }
+
+  .login-box .lock-icon {
+    font-size: 2.2rem;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .login-box h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  .login-box h1 span { color: var(--accent); }
+  .login-box p { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 22px; }
+  .login-box .form-group { text-align: left; }
+  .login-box .btn-block { width: 100%; padding: 11px; font-size: 0.95rem; margin-top: 8px; }
+
+  .login-error {
+    color: #f44;
+    font-size: 0.8rem;
+    min-height: 18px;
+    margin: 8px 0 0;
+  }
+
+  /* User menu */
+  .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .user-badge {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .user-badge::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+    margin-right: 6px;
+  }
+
+  /* Backup section */
+  .backup-note {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .backup-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* Collapsible Team Panel */
+  .collapsible-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    margin-bottom: 12px;
+    user-select: none;
+  }
+
+  .collapsible-header h3 { margin-bottom: 0; }
+
+  .collapse-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    line-height: 1;
+  }
+
+  .collapse-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  .collapse-btn.rotated { transform: rotate(-90deg); }
+
+  .team-panel-body.collapsed { display: none; }
+
+  /* Settings */
+  .settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .settings-header h2 { font-size: 1.05rem; }
+
+  .settings-tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .settings-tab {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary);
+    padding: 12px 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .settings-tab:hover { color: var(--text-primary); }
+  .settings-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .settings-section {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 55vh;
+  }
+
+  .settings-section h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+
+  .region-form {
+    padding: 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-top: 14px;
+  }
+
+  .region-form .form-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  .region-form input[type="color"] {
+    width: 60px;
+    height: 38px;
+    padding: 2px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    cursor: pointer;
+  }
+
+  .region-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+  }
+
+  .region-item .region-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .region-item .region-name {
+    flex: 1;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .region-item .region-count {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    margin-right: 6px;
+  }
+
+  .region-item button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 3px 5px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+
+  .region-item button:hover { color: var(--accent); }
+  .region-item .region-del:hover { color: #f44; }
+
+  .account-separator {
+    border-bottom: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .cloud-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .sync-status {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .sync-status.ok { color: #4CAF50; }
+  .sync-status.err { color: #f44; }
+
+  .cloud-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .cloud-status-dot.on { background: #4CAF50; }
+  .cloud-status-dot.off { background: #888; }
+  .cloud-status-dot.err { background: #f44; }
+
+  .settings-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .settings-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: rotate(90deg);
+  }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 220px; min-width: 220px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>PTP</span> - Cronograma de Equipes</h1>
+  <div class="header-controls">
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)">&#9664; Ant</button>
+      <span class="current-month" id="currentMonth"></span>
+      <button onclick="changeMonth(1)">Prox &#9654;</button>
+    </div>
+    <button class="btn btn-secondary" onclick="goToToday()">Hoje</button>
+    <button class="btn btn-secondary" style="border:1px solid var(--accent);color:var(--accent);" onclick="openDayExpand()" title="Ver o dia expandido com todas as equipes e observacoes">&#8689; Expandir Dia</button>
+    <button class="btn btn-primary" onclick="openAddModal()">+ Agendamento</button>
+    <div class="user-menu">
+      <span class="user-badge" id="userName">--</span>
+      <button class="settings-btn" onclick="openSettings()" title="Configurações">&#9881;</button>
+      <button class="btn btn-secondary btn-sm" onclick="openPwdModal()" title="Trocar senha">Senha</button>
+      <button class="btn btn-secondary btn-sm" onclick="doLogout()" title="Sair da sessao">Sair</button>
+    </div>
+  </div>
+</header>
+
+<div class="tab-bar">
+    <button class="tab active" data-tab="calendario" onclick="switchTab('calendario')">Cronograma</button>
+    <button class="tab" data-tab="tarefas" onclick="switchTab('tarefas')">Tarefas<span class="tab-count" id="taskCountBadge">0</span></button>
+  </div>
+
+<div class="main-layout" id="calendarioView" style="display:flex;">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="collapsible-header" onclick="toggleTeamPanel()" title="Exibir/fechar equipes">
+        <h3>Equipes</h3>
+        <button class="collapse-btn" id="teamPanelToggle" onclick="event.stopPropagation();toggleTeamPanel()">&#9662;</button>
+      </div>
+      <div class="team-panel-body" id="teamPanelBody">
+        <div id="teamList"></div>
+        <div class="add-team-form">
+          <input type="text" id="newTeamName" placeholder="Nome da equipe..." onkeypress="if(event.key==='Enter')addTeam()">
+        </div>
+        <div class="add-team-form" style="margin-top:6px;">
+          <select id="newTeamType">
+            <option value="DEGRADAÇÃO">DEGRADAÇÃO</option>
+            <option value="PODA">PODA</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="addTeam()">+ Adicionar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Filtros Avançados</h3>
+      <div class="filter-block">
+        <div class="filter-block-title">Regiao <span class="filter-count" id="regionFilterCount"></span></div>
+        <div id="regionFilters"></div>
+      </div>
+      <div class="filter-block">
+        <div class="filter-block-title">Tipo de Equipe <span class="filter-count" id="typeFilterCount"></span></div>
+        <div id="typeFilters" style="margin:0 -3px;"></div>
+      </div>
+      <div class="filter-block">
+        <div class="filter-block-title">Criticidade <span class="filter-count" id="catFilterCount"></span></div>
+        <div id="categoryFilters" style="margin:0 -3px;"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Legenda</h3>
+      <div class="legend-item"><div class="legend-color" style="background:var(--normal)"></div> Normal</div>
+      <div class="legend-item"><div class="legend-color" style="background:var(--importante)"></div> Importante</div>
+      <div class="legend-item"><div class="legend-color" style="background:var(--critico)"></div> Critico</div>
+      <div style="margin-top:8px"></div>
+      <div class="legend-item"><div class="legend-color" style="background:#FFA726"></div> DEGRADAÇÃO</div>
+      <div class="legend-item"><div class="legend-color" style="background:#66BB6A"></div> PODA</div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Estatisticas</h3>
+      <div id="statsContent" style="font-size:0.8rem;color:var(--text-secondary);"></div>
+    </div>
+  <div class="sidebar-section">
+      <h3>Dados / Backup</h3>
+      <div class="backup-actions">
+        <button class="btn btn-secondary btn-sm" onclick="exportData()" title="Baixar backup JSON">Exportar</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('importFile').click()" title="Restaurar de arquivo JSON">Importar</button>
+      </div>
+      <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="handleImport(this)">
+      <div class="backup-note">&#128190; Salvamento automatico ativo.<br>Todos os dados sao mantidos no navegador (localStorage). Exporte um backup periodicamente.</div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Sincronizacao</h3>
+      <div class="backup-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openSyncModal('export')" title="Copiar dados como texto">Copiar Dados</button>
+        <button class="btn btn-secondary btn-sm" onclick="openSyncModal('import')" title="Colar dados de outro dispositivo">Colar Dados</button>
+        <button class="btn btn-secondary btn-sm" onclick="openSettingsTab('cloud')" title="Configurar cloud automatica">&#9729; Cloud</button>
+      </div>
+      <div class="backup-note" id="syncSidebarStatus">Cloud: desativada</div>
+    </div>
+  </aside>
+
+  <!-- Calendar -->
+  <div class="calendar-area">
+    <div class="calendar-header-row">
+      <div class="day-header">Dom</div>
+      <div class="day-header">Seg</div>
+      <div class="day-header">Ter</div>
+      <div class="day-header">Qua</div>
+      <div class="day-header">Qui</div>
+      <div class="day-header">Sex</div>
+      <div class="day-header weekend">Sab</div>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+</div>
+
+<!-- Tasks View -->
+<div class="tasks-view" id="tarefasView" style="display:none;">
+  <div class="tasks-toolbar">
+    <h2>Tarefas por <span>SE</span></h2>
+    <div class="tasks-controls">
+      <div class="status-filter" id="taskStatusFilter"></div>
+      <button class="btn btn-primary" onclick="openTaskModal()">+ Nova Tarefa</button>
+    </div>
+  </div>
+  <div class="tasks-columns" id="tasksColumns"></div>
+</div>
+
+<!-- Modal Agendamento -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Novo Agendamento</h2>
+    <input type="hidden" id="editEventId" value="">
+    <div class="form-group">
+      <label>Data</label>
+      <input type="date" id="eventDate">
+    </div>
+    <div class="form-group">
+      <label>Equipe</label>
+      <select id="eventTeam"></select>
+    </div>
+    <div class="form-group">
+      <label>Regiao</label>
+      <select id="eventRegion"></select>
+    </div>
+    <div class="form-group">
+      <label>Categoria</label>
+      <select id="eventCategory">
+        <option value="normal">Normal</option>
+        <option value="importante">Importante</option>
+        <option value="critico">Critico</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Descricao do Servico</label>
+      <textarea id="eventDescription" placeholder="Descreva o servico a ser executado..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEvent()" id="btnSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar Equipe -->
+<div class="modal-overlay" id="teamModalOverlay">
+  <div class="modal">
+    <h2>Editar Equipe</h2>
+    <input type="hidden" id="editTeamId" value="">
+    <div class="form-group">
+      <label>Nome da Equipe</label>
+      <input type="text" id="editTeamName">
+    </div>
+    <div class="form-group">
+      <label>Tipo de Equipe</label>
+      <select id="editTeamType">
+        <option value="DEGRADAÇÃO">DEGRADAÇÃO</option>
+        <option value="PODA">PODA</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeTeamModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTeam()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Dia Expandido -->
+<div class="modal-overlay" id="dayExpandOverlay">
+  <div class="modal modal-wide">
+    <div class="dex-header">
+      <div class="dex-nav">
+        <button onclick="moveDayExpand(-1)">&#9664;</button>
+        <div>
+          <div class="dex-date-label" id="dexDateLabel"></div>
+          <input type="date" id="dexDateInput" onchange="setDayExpandDate(this.value)" style="width:100%;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);font-size:0.75rem;margin-top:4px;">
+        </div>
+        <button onclick="moveDayExpand(1)">&#9654;</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-secondary btn-sm" onclick="openAddModalForDate(dayExpandDate)">+ Novo</button>
+        <button class="detail-close" onclick="closeDayExpand()">&times;</button>
+      </div>
+    </div>
+    <div class="dex-body" id="dexBody"></div>
+  </div>
+</div>
+
+<!-- Modal Tarefa -->
+<div class="modal-overlay" id="taskModalOverlay">
+  <div class="modal">
+    <h2 id="taskModalTitle">Nova Tarefa</h2>
+    <input type="hidden" id="editTaskId" value="">
+    <div class="form-group">
+      <label>Descricao da Tarefa</label>
+      <input type="text" id="taskDescription" placeholder="Descreva a tarefa...">
+    </div>
+    <div class="form-group">
+      <label>Observacao</label>
+      <textarea id="taskObservacao" placeholder="Observacoes adicionais (opcional)..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Regiao (SE)</label>
+      <select id="taskRegion"></select>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="taskStatus">
+        <option value="pendente">Pendente</option>
+        <option value="em_andamento">Em Andamento</option>
+        <option value="concluido">Concluido</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeTaskModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTask()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Context Menu -->
+<div class="context-menu" id="contextMenu">
+  <div class="context-menu-item" onclick="editFromContext()">Editar</div>
+  <div class="context-menu-item" onclick="duplicateEvent()">Duplicar</div>
+  <div class="context-menu-item" style="color:#f44" onclick="deleteFromContext()">Excluir</div>
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-header">
+      <h2 id="detailTitle">Detalhes do Agendamento</h2>
+      <div class="detail-header-actions">
+        <button class="btn btn-secondary btn-sm" id="btnToggleEdit" onclick="toggleDetailEdit()" style="display:none;">Editar</button>
+        <button class="detail-close" onclick="closeDetail()">&times;</button>
+      </div>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+    <div class="detail-actions" id="detailActions">
+      <button class="btn btn-secondary" onclick="closeDetail()">Fechar</button>
+      <button class="btn btn-danger" onclick="deleteDetailEvent()">Excluir</button>
+      <button class="btn btn-primary" id="btnDetailSave" onclick="saveDetailChanges()" style="display:none;">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Trocar Senha -->
+<div class="modal-overlay" id="pwdModalOverlay">
+  <div class="modal">
+    <h2>Trocar Senha</h2>
+    <div class="login-error" id="pwdError"></div>
+    <div class="form-group">
+      <label>Senha Atual</label>
+      <input type="password" id="pwdCurrent">
+    </div>
+    <div class="form-group">
+      <label>Nova Senha</label>
+      <input type="password" id="pwdNew">
+    </div>
+    <div class="form-group">
+      <label>Confirmar Nova Senha</label>
+      <input type="password" id="pwdConfirm" onkeypress="if(event.key==='Enter')savePassword()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closePwdModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePassword()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Configuracoes -->
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal modal-wide" style="max-width:560px;">
+    <div class="settings-header">
+      <h2>&#9881; Configuracoes</h2>
+      <button class="detail-close" onclick="closeSettings()">&times;</button>
+    </div>
+      <div class="settings-tabs">
+      <button class="settings-tab active" data-settings-tab="regions" onclick="switchSettingsTab('regions')">Regioes</button>
+      <button class="settings-tab" data-settings-tab="account" onclick="switchSettingsTab('account')">Conta / Login</button>
+      <button class="settings-tab" data-settings-tab="cloud" onclick="switchSettingsTab('cloud')">Cloud</button>
+    </div>
+
+    <!-- Tab Regioes -->
+    <div class="settings-section" id="settingsRegionsTab">
+      <h3>Gerencie as regioes (SE)</h3>
+      <div id="regionsList"></div>
+
+      <div class="region-form" id="editRegionForm" style="display:none;">
+        <h3>Editar Regiao</h3>
+        <input type="hidden" id="editRegionId">
+        <div class="form-group">
+          <label>Nome da Regiao</label>
+          <input type="text" id="editRegionName" placeholder="Ex: 77 - SE_NOVA">
+        </div>
+        <div class="form-group">
+          <label>Cor</label>
+          <input type="color" id="editRegionColor">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" onclick="cancelRegionEdit()">Cancelar</button>
+          <button class="btn btn-primary" onclick="saveRegionEdit()">Salvar</button>
+        </div>
+      </div>
+
+      <div class="region-form" id="addRegionForm">
+        <h3>Adicionar Regiao</h3>
+        <div class="form-group">
+          <label>Nome da Regiao</label>
+          <input type="text" id="newRegionName" placeholder="Ex: 77 - SE_NOVA">
+        </div>
+        <div class="form-group">
+          <label>Cor</label>
+          <input type="color" id="newRegionColor" value="#9E9E9E">
+        </div>
+        <button class="btn btn-primary" onclick="addRegion()">+ Adicionar Regiao</button>
+      </div>
+    </div>
+
+    <!-- Tab Conta -->
+    <div class="settings-section" id="settingsAccountTab" style="display:none;">
+      <h3>Alterar Nome de Usuario</h3>
+      <div class="form-group">
+        <label>Novo nome de usuario</label>
+        <input type="text" id="newUsername" placeholder="Digite o novo nome de usuario">
+      </div>
+      <button class="btn btn-primary" onclick="changeUsername()">Salvar Nome</button>
+
+      <div class="account-separator"></div>
+
+      <h3>Alterar Senha</h3>
+      <div class="form-group">
+        <label>Senha atual</label>
+        <input type="password" id="settingsCurrentPass">
+      </div>
+      <div class="form-group">
+        <label>Nova senha</label>
+        <input type="password" id="settingsNewPass">
+      </div>
+      <div class="form-group">
+        <label>Confirmar nova senha</label>
+        <input type="password" id="settingsConfirmPass">
+      </div>
+      <div class="login-error" id="settingsError"></div>
+      <button class="btn btn-primary" onclick="changeSettingsPassword()">Alterar Senha</button>
+    </div>
+
+    <!-- Tab Cloud -->
+    <div class="settings-section" id="settingsCloudTab" style="display:none;">
+      <h3>Sincronizacao Cloud (gratis via JSONBin)</h3>
+      <p class="backup-note">
+        Sincroniza seus dados automaticamente entre dispositivos.
+        Preencha sua chave e bin para ativar, ou clique em "Criar Cloud" para gerar um novo.<br>
+        Acesse <strong>jsonbin.io</strong> para obter sua chave (gratuita).
+      </p>
+
+      <div class="form-group">
+        <label>X-Master-Key (jsonbin.io)</label>
+        <input type="password" id="syncApiKey" placeholder="Cole sua chave aqui">
+      </div>
+      <div class="form-group">
+        <label>ID do Bin</label>
+        <input type="text" id="syncBinId" placeholder="Será gerado ao criar cloud" readonly>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="syncAuto" checked> Sincronizacao automatica a cada alteracao
+        </label>
+      </div>
+
+      <div class="cloud-actions">
+        <button class="btn btn-primary" onclick="saveSyncConfig()">Salvar Config</button>
+        <button class="btn btn-secondary" onclick="createCloudBin()">Criar Cloud</button>
+        <button class="btn btn-secondary" onclick="testCloudConnection()">Testar Conexao</button>
+        <button class="btn btn-secondary" onclick="pushToCloud()">Enviar Agora</button>
+        <button class="btn btn-secondary" onclick="pullFromCloud()">Baixar Agora</button>
+      </div>
+
+      <div class="login-error" id="syncError"></div>
+      <div class="sync-status" id="syncStatusText"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Sincronizar (copiar/colar) -->
+<div class="modal-overlay" id="syncModalOverlay">
+  <div class="modal" style="width:540px;">
+    <h2>Sincronizar Dados</h2>
+    <p class="backup-note">Copie o texto abaixo e cole em outro dispositivo, ou cole dados de outro dispositivo aqui.</p>
+    <div class="form-group">
+      <label>Dados do cronograma</label>
+      <textarea id="syncText" style="min-height:200px;font-family:'Courier New',monospace;font-size:0.72rem;background:var(--bg-primary);"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeSyncModal()">Fechar</button>
+      <button class="btn btn-secondary" onclick="copySyncText()">Copiar Dados</button>
+      <button class="btn btn-primary" onclick="applySyncText()">Aplicar Neste Dispositivo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Login Screen -->
+<div class="login-overlay active" id="loginOverlay">
+  <div class="login-box">
+    <div class="lock-icon">&#128272;</div>
+    <h1><span>PTP</span> Cronograma</h1>
+    <p>Entre para acessar o cronograma de equipes</p>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" id="loginUser" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="loginPass" autocomplete="current-password" onkeypress="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button class="btn btn-primary btn-block" onclick="doLogin()">Entrar</button>
+    <div class="backup-note" style="margin-top:14px;">Primeiro acesso: usuario <strong>admin</strong>, senha <strong>admin</strong>.</div>
+  </div>
+</div>
+
+<script>
+// ============ STATE ============
+const REGIONS_DEFAULTS = [
+  { id: '61 - SE_CAM', name: '61 - SE_CAM', color: '#4CAF50' },
+  { id: '233 - SE_MPO', name: '233 - SE_MPO', color: '#9C27B0' },
+  { id: '62 - SE_GOYA', name: '62 - SE_GOYA', color: '#00BCD4' },
+  { id: '63 - SE_XAV', name: '63 - SE_XAV', color: '#FF5722' }
+];
+
+let REGIONS = REGIONS_DEFAULTS.map(r => ({ ...r }));
+
+const TEAM_TYPES = [
+  { id: 'DEGRADAÇÃO', color: '#FFA726' },
+  { id: 'PODA', color: '#66BB6A' }
+];
+
+const CATEGORIES = [
+  { id: 'normal', name: 'Normal', color: '#2196F3' },
+  { id: 'importante', name: 'Importante', color: '#FF9800' },
+  { id: 'critico', name: 'Critico', color: '#F44336' }
+];
+
+const TASK_STATUS = [
+  { id: 'pendente', name: 'Pendente', color: '#FF9800' },
+  { id: 'em_andamento', name: 'Em Andamento', color: '#2196F3' },
+  { id: 'concluido', name: 'Concluido', color: '#4CAF50' }
+];
+
+const TEAM_COLORS = ['#e94560','#2196F3','#4CAF50','#FF9800','#9C27B0','#00BCD4','#FF5722','#E91E63','#3F51B5','#8BC34A','#FFC107','#795548'];
+
+let state = {
+  currentDate: new Date(),
+  teams: [],
+  events: [],
+  tasks: [],
+  taskStatusFilter: 'all',
+  activeRegions: REGIONS.map(r => r.id),
+  activeTeamTypes: TEAM_TYPES.map(t => t.id),
+  activeCategories: CATEGORIES.map(c => c.id),
+  draggedEvent: null,
+  contextEvent: null,
+  activeTab: 'calendario',
+  teamPanelOpen: true,
+  sync: { apiKey: '', binId: '', auto: true, lastSync: null }
+};
+
+function saveState() {
+  localStorage.setItem('ptp_teams', JSON.stringify(state.teams));
+  localStorage.setItem('ptp_events', JSON.stringify(state.events));
+  localStorage.setItem('ptp_tasks', JSON.stringify(state.tasks));
+  localStorage.setItem('ptp_regions', JSON.stringify(REGIONS));
+  localStorage.setItem('ptp_ui', JSON.stringify({ teamPanelOpen: state.teamPanelOpen }));
+  localStorage.setItem('ptp_sync', JSON.stringify(state.sync));
+  scheduleCloudPush();
+}
+
+function loadState() {
+  try {
+    const t = localStorage.getItem('ptp_teams');
+    const e = localStorage.getItem('ptp_events');
+    const tk = localStorage.getItem('ptp_tasks');
+    if (t) state.teams = JSON.parse(t);
+    if (e) state.events = JSON.parse(e);
+    if (tk) state.tasks = JSON.parse(tk);
+    const rg = localStorage.getItem('ptp_regions');
+    if (rg) {
+      const parsed = JSON.parse(rg);
+      if (Array.isArray(parsed) && parsed.length > 0) REGIONS = parsed;
+    }
+    state.activeRegions = REGIONS.map(r => r.id);
+    const ui = localStorage.getItem('ptp_ui');
+    if (ui) {
+      const parsed = JSON.parse(ui);
+      if (typeof parsed.teamPanelOpen === 'boolean') state.teamPanelOpen = parsed.teamPanelOpen;
+    }
+    const sy = localStorage.getItem('ptp_sync');
+    if (sy) {
+      const parsed = JSON.parse(sy);
+      if (typeof parsed === 'object') Object.assign(state.sync, parsed);
+    }
+  } catch(ex) {}
+
+  if (state.teams.length === 0) {
+    state.teams = [
+      { id: genId(), name: 'Equipe Alpha', color: TEAM_COLORS[0], type: 'DEGRADAÇÃO' },
+      { id: genId(), name: 'Equipe Bravo', color: TEAM_COLORS[1], type: 'PODA' },
+      { id: genId(), name: 'Equipe Charlie', color: TEAM_COLORS[2], type: 'DEGRADAÇÃO' },
+      { id: genId(), name: 'Equipe Delta', color: TEAM_COLORS[3], type: 'PODA' }
+    ];
+    saveState();
+  }
+
+  state.teams.forEach(t => { if (!t.type) t.type = 'DEGRADAÇÃO'; });
+
+  const REGION_MIGRATION = {
+    'SE_CAM': '61 - SE_CAM',
+    'SE_MPO': '233 - SE_MPO',
+    'SE_GOI': '62 - SE_GOYA',
+    'SE_XAV': '63 - SE_XAV'
+  };
+  state.events.forEach(e => {
+    if (REGION_MIGRATION[e.region]) e.region = REGION_MIGRATION[e.region];
+  });
+}
+
+function genId() { return Math.random().toString(36).substr(2, 9); }
+
+// ============ RENDER ============
+function render() {
+  renderMonthLabel();
+  renderTeams();
+  renderRegionFilters();
+  renderTypeFilters();
+  renderCategoryFilters();
+  renderCalendar();
+  renderStats();
+}
+
+function renderMonthLabel() {
+  const months = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('currentMonth').textContent = months[state.currentDate.getMonth()] + ' ' + state.currentDate.getFullYear();
+}
+
+function renderTeams() {
+  const el = document.getElementById('teamList');
+  el.innerHTML = state.teams.map(t => `
+    <div class="team-item" draggable="true" data-team-id="${t.id}"
+         ondragstart="onTeamDragStart(event,'${t.id}')">
+      <div class="team-color" style="background:${t.color}"></div>
+      <span class="team-name">${t.name}</span>
+      <span class="team-type-badge" data-team-type="${t.type || 'DEGRADAÇÃO'}">${t.type || 'DEGRADAÇÃO'}</span>
+      <button class="team-edit" title="Editar equipe" onclick="openTeamModal('${t.id}')">&#9998;</button>
+      <button class="team-delete" onclick="deleteTeam('${t.id}')">&times;</button>
+    </div>
+  `).join('');
+
+  // Update selects
+  updateTeamSelect();
+  updateRegionSelect();
+  updateTaskRegionSelect();
+
+  // Sync panel collapsed state
+  const body = document.getElementById('teamPanelBody');
+  const btn = document.getElementById('teamPanelToggle');
+  if (state.teamPanelOpen) {
+    body.classList.remove('collapsed');
+    btn.classList.remove('rotated');
+  } else {
+    body.classList.add('collapsed');
+    btn.classList.add('rotated');
+  }
+}
+
+function renderRegionFilters() {
+  document.getElementById('regionFilters').innerHTML = REGIONS.map(r => {
+    const count = state.events.filter(e => e.region === r.id).length;
+    return `
+    <div class="region-chip ${state.activeRegions.includes(r.id)?'active':''}"
+         style="background:${r.color}22; color:${r.color}"
+         onclick="toggleRegion('${r.id}')">
+      <div class="dot" style="background:${r.color}"></div>
+      ${r.name}<span class="filter-count">${count}</span>
+    </div>
+  `;
+  }).join('');
+  document.getElementById('regionFilterCount').textContent = state.activeRegions.length + '/' + REGIONS.length;
+}
+
+function renderTypeFilters() {
+  document.getElementById('typeFilters').innerHTML = TEAM_TYPES.map(t => {
+    const count = state.events.filter(e => {
+      const team = state.teams.find(tm => tm.id === e.teamId);
+      return team && team.type === t.id;
+    }).length;
+    return `
+      <div class="type-chip ${state.activeTeamTypes.includes(t.id)?'active':''}"
+           style="background:${t.color}22; color:${t.color}"
+           onclick="toggleTeamType('${t.id}')">
+        <div class="dot" style="background:${t.color}"></div>
+        ${t.id}<span class="filter-count">${count}</span>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('typeFilterCount').textContent = state.activeTeamTypes.length + '/' + TEAM_TYPES.length;
+}
+
+function renderCategoryFilters() {
+  document.getElementById('categoryFilters').innerHTML = CATEGORIES.map(c => {
+    const count = state.events.filter(e => e.category === c.id).length;
+    return `
+    <div class="cat-item ${state.activeCategories.includes(c.id)?'active':''}"
+         style="background:${c.color}22; color:${c.color}"
+         onclick="toggleCategory('${c.id}')">
+      <div class="cat-dot" style="background:${c.color}"></div>
+      ${c.name}<span class="filter-count">${count}</span>
+    </div>
+  `;
+  }).join('');
+  document.getElementById('catFilterCount').textContent = state.activeCategories.length + '/' + CATEGORIES.length;
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  const year = state.currentDate.getFullYear();
+  const month = state.currentDate.getMonth();
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startOffset = firstDay.getDay();
+  const totalDays = lastDay.getDate();
+
+  const prevLast = new Date(year, month, 0).getDate();
+
+  const today = new Date();
+  const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+
+  let cells = '';
+
+  // Previous month
+  for (let i = startOffset - 1; i >= 0; i--) {
+    const d = prevLast - i;
+    const m = month === 0 ? 12 : month;
+    const y = month === 0 ? year - 1 : year;
+    const dateStr = y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    cells += buildCell(dateStr, d, true, false);
+  }
+
+  // Current month
+  for (let d = 1; d <= totalDays; d++) {
+    const dateStr = year + '-' + String(month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const isToday = dateStr === todayStr;
+    cells += buildCell(dateStr, d, false, isToday);
+  }
+
+  // Next month fill
+  const totalCells = startOffset + totalDays;
+  const remaining = (7 - (totalCells % 7)) % 7;
+  for (let d = 1; d <= remaining; d++) {
+    const m = month + 2 > 12 ? 1 : month + 2;
+    const y = month + 2 > 12 ? year + 1 : year;
+    const dateStr = y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    cells += buildCell(dateStr, d, true, false);
+  }
+
+  grid.innerHTML = cells;
+}
+
+function buildCell(dateStr, dayNum, otherMonth, isToday) {
+  const events = state.events.filter(e => {
+    if (e.date !== dateStr) return false;
+    if (!state.activeRegions.includes(e.region)) return false;
+    if (!state.activeCategories.includes(e.category)) return false;
+    const team = state.teams.find(t => t.id === e.teamId);
+    if (!team) return false;
+    if (!state.activeTeamTypes.includes(team.type)) return false;
+    return true;
+  });
+
+  let itemsHtml = events.map(ev => {
+    const team = state.teams.find(t => t.id === ev.teamId);
+    const region = REGIONS.find(r => r.id === ev.region);
+    const typeColor = team ? getTeamTypeColor(team.type) : '#888';
+    return `
+      <div class="event-card cat-${ev.category}" draggable="true"
+           data-event-id="${ev.id}"
+           ondragstart="onEventDragStart(event,'${ev.id}')"
+           onclick="event.stopPropagation();openDetail('${ev.id}')"
+           oncontextmenu="showContext(event,'${ev.id}')">
+        <div class="ev-team">
+          <div class="ev-dot" style="background:${team?team.color:'#888'}"></div>
+          ${team?team.name:'?'}
+        </div>
+        <div class="ev-region" style="color:${region?region.color:'#aaa'}">
+          ${region?region.name:''}${team && team.type ? `<span style="color:${typeColor};font-weight:600;"> &bull; ${team.type}</span>` : ''}
+        </div>
+        ${ev.description ? `<div class="ev-desc">${ev.description}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="calendar-cell ${otherMonth?'other-month':''} ${isToday?'today':''}"
+         data-date="${dateStr}"
+         ondragover="onCellDragOver(event)"
+         ondragleave="onCellDragLeave(event)"
+         ondrop="onCellDrop(event,'${dateStr}')"
+         onclick="openAddModalForDate('${dateStr}')">
+      <div class="cell-date">${dayNum}</div>
+      <div class="cell-items">${itemsHtml}</div>
+    </div>
+  `;
+}
+
+function renderStats() {
+  const total = state.events.length;
+  const byCat = { normal: 0, importante: 0, critico: 0 };
+  const byRegion = {};
+  REGIONS.forEach(r => byRegion[r.id] = 0);
+
+  state.events.forEach(e => {
+    if (byCat[e.category] !== undefined) byCat[e.category]++;
+    if (byRegion[e.region] !== undefined) byRegion[e.region]++;
+  });
+
+  document.getElementById('statsContent').innerHTML = `
+    <div style="margin-bottom:8px"><strong>${total}</strong> agendamentos no mes</div>
+    <div>Normal: <strong>${byCat.normal}</strong> | Imp: <strong>${byCat.importante}</strong> | Crit: <strong>${byCat.critico}</strong></div>
+    <div style="margin-top:6px">
+      ${REGIONS.map(r => `<div>${r.name}: <strong>${byRegion[r.id]}</strong></div>`).join('')}
+    </div>
+  `;
+}
+
+// ============ TEAM MANAGEMENT ============
+function addTeam() {
+  const input = document.getElementById('newTeamName');
+  const name = input.value.trim();
+  if (!name) return;
+
+  const type = document.getElementById('newTeamType').value || 'DEGRADAÇÃO';
+  const colorIdx = state.teams.length % TEAM_COLORS.length;
+  state.teams.push({ id: genId(), name, color: TEAM_COLORS[colorIdx], type });
+  input.value = '';
+  saveState();
+  render();
+  showToast(`Equipe "${name}" (${type}) adicionada!`);
+}
+
+function openTeamModal(id) {
+  const team = state.teams.find(t => t.id === id);
+  if (!team) return;
+  document.getElementById('editTeamId').value = team.id;
+  document.getElementById('editTeamName').value = team.name;
+  document.getElementById('editTeamType').value = team.type || 'DEGRADAÇÃO';
+  document.getElementById('teamModalOverlay').classList.add('active');
+}
+
+function closeTeamModal() {
+  document.getElementById('teamModalOverlay').classList.remove('active');
+}
+
+function saveTeam() {
+  const id = document.getElementById('editTeamId').value;
+  const team = state.teams.find(t => t.id === id);
+  if (!team) return;
+
+  const name = document.getElementById('editTeamName').value.trim();
+  const type = document.getElementById('editTeamType').value;
+  if (!name) {
+    showToast('Informe o nome da equipe!');
+    return;
+  }
+
+  team.name = name;
+  team.type = type;
+  saveState();
+  closeTeamModal();
+  render();
+  showToast('Equipe atualizada!');
+}
+
+function getTeamTypeColor(type) {
+  const t = TEAM_TYPES.find(x => x.id === type);
+  return t ? t.color : '#888';
+}
+
+function deleteTeam(id) {
+  if (!confirm('Excluir esta equipe e todos seus agendamentos?')) return;
+  state.teams = state.teams.filter(t => t.id !== id);
+  state.events = state.events.filter(e => e.teamId !== id);
+  saveState();
+  render();
+  showToast('Equipe excluida!');
+}
+
+// ============ EVENT MANAGEMENT ============
+function updateTeamSelect() {
+  const sel = document.getElementById('eventTeam');
+  sel.innerHTML = state.teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+}
+
+function updateRegionSelect() {
+  const sel = document.getElementById('eventRegion');
+  sel.innerHTML = REGIONS.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+}
+
+function updateTaskRegionSelect() {
+  const sel = document.getElementById('taskRegion');
+  sel.innerHTML = REGIONS.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+}
+
+function openAddModal() {
+  document.getElementById('editEventId').value = '';
+  document.getElementById('modalTitle').textContent = 'Novo Agendamento';
+  document.getElementById('btnSave').textContent = 'Salvar';
+  document.getElementById('eventDate').value = formatDate(new Date());
+  document.getElementById('eventTeam').value = state.teams.length > 0 ? state.teams[0].id : '';
+  document.getElementById('eventRegion').value = REGIONS[0].id;
+  document.getElementById('eventCategory').value = 'normal';
+  document.getElementById('eventDescription').value = '';
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function openAddModalForDate(dateStr) {
+  openAddModal();
+  document.getElementById('eventDate').value = dateStr;
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+function saveEvent() {
+  const id = document.getElementById('editEventId').value;
+  const date = document.getElementById('eventDate').value;
+  const teamId = document.getElementById('eventTeam').value;
+  const region = document.getElementById('eventRegion').value;
+  const category = document.getElementById('eventCategory').value;
+  const description = document.getElementById('eventDescription').value.trim();
+
+  if (!date || !teamId) {
+    showToast('Preencha os campos obrigatorios!');
+    return;
+  }
+
+  if (id) {
+    const ev = state.events.find(e => e.id === id);
+    if (ev) {
+      ev.date = date;
+      ev.teamId = teamId;
+      ev.region = region;
+      ev.category = category;
+      ev.description = description;
+    }
+    showToast('Agendamento atualizado!');
+  } else {
+    state.events.push({ id: genId(), date, teamId, region, category, description });
+    showToast('Agendamento criado!');
+  }
+
+  saveState();
+  closeModal();
+  render();
+  if (document.getElementById('dayExpandOverlay').classList.contains('active')) renderDayExpand();
+}
+
+function deleteEvent(id) {
+  state.events = state.events.filter(e => e.id !== id);
+  saveState();
+  render();
+  if (document.getElementById('dayExpandOverlay').classList.contains('active')) renderDayExpand();
+  showToast('Agendamento excluido!');
+}
+
+function editEvent(id) {
+  const ev = state.events.find(e => e.id === id);
+  if (!ev) return;
+
+  document.getElementById('editEventId').value = ev.id;
+  document.getElementById('modalTitle').textContent = 'Editar Agendamento';
+  document.getElementById('btnSave').textContent = 'Atualizar';
+  document.getElementById('eventDate').value = ev.date;
+  document.getElementById('eventTeam').value = ev.teamId;
+  document.getElementById('eventRegion').value = ev.region;
+  document.getElementById('eventCategory').value = ev.category;
+  document.getElementById('eventDescription').value = ev.description || '';
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function duplicateEvent() {
+  hideContext();
+  if (!state.contextEvent) return;
+  const ev = state.events.find(e => e.id === state.contextEvent);
+  if (!ev) return;
+
+  state.events.push({
+    ...ev,
+    id: genId()
+  });
+  saveState();
+  render();
+  showToast('Agendamento duplicado!');
+}
+
+// ============ DETAIL PANEL ============
+let detailState = { eventId: null, isEdit: false };
+
+function openDetail(id) {
+  const ev = state.events.find(e => e.id === id);
+  if (!ev) return;
+
+  detailState.eventId = id;
+  detailState.isEdit = false;
+  document.getElementById('detailOverlay').classList.add('active');
+  renderDetail();
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('active');
+  detailState.eventId = null;
+  detailState.isEdit = false;
+}
+
+function toggleDetailEdit() {
+  detailState.isEdit = !detailState.isEdit;
+  renderDetail();
+}
+
+function formatDateBR(dateStr) {
+  const parts = dateStr.split('-');
+  return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : dateStr;
+}
+
+function getWeekdayName(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const weekdays = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'];
+  return weekdays[d.getDay()];
+}
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function renderDetail() {
+  const ev = state.events.find(e => e.id === detailState.eventId);
+  if (!ev) {
+    closeDetail();
+    return;
+  }
+
+  const team = state.teams.find(t => t.id === ev.teamId);
+  const region = REGIONS.find(r => r.id === ev.region);
+  const cat = CATEGORIES.find(c => c.id === ev.category);
+
+  const btnToggle = document.getElementById('btnToggleEdit');
+  const btnSave = document.getElementById('btnDetailSave');
+  const body = document.getElementById('detailBody');
+
+  if (detailState.isEdit) {
+    // ---------- EDIT MODE ----------
+    btnToggle.style.display = 'inline-block';
+    btnToggle.textContent = 'Cancelar edicao';
+    btnSave.style.display = 'inline-block';
+
+    body.innerHTML = `
+      <div class="detail-edit-row form-group">
+        <label>Data</label>
+        <input type="date" id="detailDate" value="${ev.date}">
+      </div>
+      <div class="detail-edit-row form-group">
+        <label>Equipe</label>
+        <select id="detailTeam">
+          ${state.teams.map(t => `<option value="${t.id}" ${t.id===ev.teamId?'selected':''}>${t.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="detail-edit-row form-group">
+        <label>Regiao</label>
+        <select id="detailRegion">
+          ${REGIONS.map(r => `<option value="${r.id}" ${r.id===ev.region?'selected':''}>${r.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="detail-edit-row form-group">
+        <label>Categoria</label>
+        <select id="detailCategory">
+          ${CATEGORIES.map(c => `<option value="${c.id}" ${c.id===ev.category?'selected':''}>${c.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="detail-edit-row form-group">
+        <label>Descricao do Servico</label>
+        <textarea id="detailDescription" placeholder="Descreva o servico a ser executado...">${escapeHtml(ev.description || '')}</textarea>
+      </div>
+    `;
+  } else {
+    // ---------- VIEW MODE ----------
+    btnToggle.style.display = 'inline-block';
+    btnToggle.textContent = 'Editar';
+    btnSave.style.display = 'none';
+
+    body.innerHTML = `
+      <div class="detail-row">
+        <div class="detail-label">Data</div>
+        <div class="detail-value">
+          <strong>${formatDateBR(ev.date)}</strong>
+          <div style="font-size:0.75rem;color:var(--text-secondary)">${getWeekdayName(ev.date)}</div>
+        </div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Equipe</div>
+        <div class="detail-value">
+          <span style="display:inline-flex;align-items:center;gap:6px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:${team?team.color:'#888'};display:inline-block;"></span>
+            <strong>${team?escapeHtml(team.name):'Equipe removida'}</strong>
+          </span>
+          ${team && team.type ? `
+            <div style="margin-top:6px;">
+              <span class="detail-badge" style="background:${getTeamTypeColor(team.type)}22;color:${getTeamTypeColor(team.type)};border:1px solid ${getTeamTypeColor(team.type)}66">
+                <span class="badge-dot" style="background:${getTeamTypeColor(team.type)}"></span>
+                ${team.type}
+              </span>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Regiao</div>
+        <div class="detail-value">
+          <span class="detail-badge" style="background:${region?region.color+'22':'#555'};color:${region?region.color:'#fff'};border:1px solid ${region?region.color+'66':'#555'}">
+            <span class="badge-dot" style="background:${region?region.color:'#888'}"></span>
+            ${region?region.name:'-'}
+          </span>
+        </div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Categoria</div>
+        <div class="detail-value">
+          <span class="detail-badge" style="background:${cat?cat.color+'22':'#555'};color:${cat?cat.color:'#fff'};border:1px solid ${cat?cat.color+'66':'#555'}">
+            <span class="badge-dot" style="background:${cat?cat.color:'#888'}"></span>
+            ${cat?cat.name:'-'}
+          </span>
+        </div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Servico</div>
+        <div class="detail-value detail-desc ${ev.description?'':'empty'}">${ev.description?escapeHtml(ev.description):'Sem descricao de servico'}</div>
+      </div>
+    `;
+  }
+}
+
+function saveDetailChanges() {
+  const ev = state.events.find(e => e.id === detailState.eventId);
+  if (!ev) return;
+
+  const date = document.getElementById('detailDate').value;
+  const teamId = document.getElementById('detailTeam').value;
+  const region = document.getElementById('detailRegion').value;
+  const category = document.getElementById('detailCategory').value;
+  const description = document.getElementById('detailDescription').value.trim();
+
+  if (!date || !teamId) {
+    showToast('Preencha os campos obrigatorios!');
+    return;
+  }
+
+  ev.date = date;
+  ev.teamId = teamId;
+  ev.region = region;
+  ev.category = category;
+  ev.description = description;
+
+  saveState();
+  detailState.isEdit = false;
+  render();
+  renderDetail();
+  showToast('Agendamento atualizado!');
+}
+
+function deleteDetailEvent() {
+  if (!detailState.eventId) return;
+  if (!confirm('Excluir este agendamento?')) return;
+  deleteEvent(detailState.eventId);
+  closeDetail();
+}
+
+// ============ DAY EXPAND ============
+let dayExpandDate = null;
+
+function openDayExpand() {
+  dayExpandDate = formatDate(new Date());
+  document.getElementById('dayExpandOverlay').classList.add('active');
+  renderDayExpand();
+}
+
+function closeDayExpand() {
+  document.getElementById('dayExpandOverlay').classList.remove('active');
+  closeModal();
+}
+
+function moveDayExpand(delta) {
+  const d = new Date(dayExpandDate + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  dayExpandDate = formatDate(d);
+  renderDayExpand();
+}
+
+function setDayExpandDate(val) {
+  if (val) {
+    dayExpandDate = val;
+    renderDayExpand();
+  }
+}
+
+function renderDayExpand() {
+  document.getElementById('dexDateInput').value = dayExpandDate;
+  document.getElementById('dexDateLabel').innerHTML = formatDateBR(dayExpandDate) + '<span class="dex-sub">' + getWeekdayName(dayExpandDate) + '</span>';
+
+  const sevOrder = { critico: 0, importante: 1, normal: 2 };
+  const events = state.events
+    .filter(e => e.date === dayExpandDate)
+    .sort((a, b) => (sevOrder[a.category] ?? 3) - (sevOrder[b.category] ?? 3));
+
+  let html = `<div class="dex-summary"><strong>${events.length}</strong> equipe(s) atuando ${formatDateBR(dayExpandDate)}</div>`;
+
+  if (events.length === 0) {
+    html += `
+      <div class="dex-empty">
+        <div class="dex-empty-icon">&#9746;</div>
+        Nenhuma equipe escalada para este dia.
+      </div>
+    `;
+  }
+
+  events.forEach(ev => {
+    const team = state.teams.find(t => t.id === ev.teamId);
+    const region = REGIONS.find(r => r.id === ev.region);
+    const cat = CATEGORIES.find(c => c.id === ev.category);
+
+    html += `
+      <div class="dex-item cat-${ev.category}">
+        <div class="dex-main">
+          <div class="dex-top">
+            <span class="dex-team">
+              <span class="dot-team" style="background:${team?team.color:'#888'}"></span>
+              ${team?escapeHtml(team.name):'Equipe removida'}
+            </span>
+            ${team && team.type ? `<span class="dex-type-badge" style="background:${getTeamTypeColor(team.type)}22;color:${getTeamTypeColor(team.type)}">${team.type}</span>` : ''}
+            <span class="dex-region-badge" style="color:${region?region.color:'#aaa'};border-color:${region?region.color+'66':'#555'};background:${region?region.color+'22':'transparent'}">${region?region.name:'-'}</span>
+            <span class="dex-cat-badge" style="color:${cat?cat.color:'#aaa'};border-color:${cat?cat.color+'66':'#555'};background:${cat?cat.color+'22':'transparent'}">${cat?cat.name:'-'}</span>
+          </div>
+          <div class="dex-desc ${ev.description?'':'empty'}">${ev.description?escapeHtml(ev.description):'Sem observacoes'}</div>
+        </div>
+        <div class="dex-actions">
+          <button class="btn btn-secondary btn-sm" onclick="editFromDayExpand('${ev.id}')">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteFromDayExpand('${ev.id}')">Excluir</button>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById('dexBody').innerHTML = html;
+}
+
+function editFromDayExpand(id) {
+  openDetail(id);
+}
+
+function deleteFromDayExpand(id) {
+  if (!confirm('Excluir este agendamento?')) return;
+  deleteEvent(id);
+  renderDayExpand();
+}
+
+// ============ TASKS ============
+function switchTab(name) {
+  state.activeTab = name;
+  document.getElementById('calendarioView').style.display = name === 'calendario' ? 'flex' : 'none';
+  document.getElementById('tarefasView').style.display = name === 'tarefas' ? 'flex' : 'none';
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  if (name === 'tarefas') renderTasks();
+  hideContext();
+}
+
+function updateTaskCount() {
+  const open = state.tasks.filter(t => t.status !== 'concluido').length;
+  document.getElementById('taskCountBadge').textContent = open;
+}
+
+function renderTasks() {
+  renderTaskStatusFilter();
+  renderTaskColumns();
+  updateTaskCount();
+}
+
+function getFilteredTasks() {
+  if (state.taskStatusFilter === 'all') return state.tasks;
+  return state.tasks.filter(t => t.status === state.taskStatusFilter);
+}
+
+function renderTaskStatusFilter() {
+  const opts = [{ id: 'all', name: 'Todas', color: null }].concat(TASK_STATUS);
+  document.getElementById('taskStatusFilter').innerHTML = opts.map(s => `
+    <div class="status-chip ${state.taskStatusFilter === s.id?'active':''}"
+         style="${s.color?`color:${s.color};`:'color:var(--text-secondary);'}"
+         onclick="setTaskStatusFilter('${s.id}')">${s.name}</div>
+  `).join('');
+}
+
+function setTaskStatusFilter(id) {
+  state.taskStatusFilter = id;
+  renderTasks();
+}
+
+function renderTaskColumns() {
+  const container = document.getElementById('tasksColumns');
+  const filtered = getFilteredTasks();
+
+  container.innerHTML = REGIONS.map(r => {
+    const regionTasks = filtered.filter(t => t.region === r.id);
+    const total = state.tasks.filter(t => t.region === r.id).length;
+    const done = state.tasks.filter(t => t.region === r.id && t.status === 'concluido').length;
+    const pct = total > 0 ? Math.round(done / total * 100) : 0;
+
+    const cards = regionTasks.length === 0
+      ? `<div class="task-col-empty">Sem tarefas</div>`
+      : regionTasks.map(t => renderTaskCard(t)).join('');
+
+    return `
+      <div class="task-col">
+        <div class="task-col-header" style="color:${r.color}">
+          <span style="width:10px;height:10px;border-radius:50%;background:${r.color};display:inline-block;"></span>
+          <span style="flex:1">${r.name}</span>
+          <span style="font-size:0.7rem;opacity:0.7">${done}/${total}</span>
+          <button class="col-add" title="Nova tarefa nesta SE" onclick="openTaskModal('${r.id}')">+</button>
+        </div>
+        <div class="task-col-progress"><div class="bar" style="width:${pct}%;background:${r.color}"></div></div>
+        <div class="task-col-body">${cards}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTaskCard(t) {
+  const st = TASK_STATUS.find(s => s.id === t.status) || TASK_STATUS[0];
+  const dateStr = t.createdAt ? formatDateBR(String(t.createdAt).split('T')[0]) : '';
+  return `
+    <div class="task-card status-${t.status}">
+      <div class="task-check" title="Alternar concluida" onclick="toggleTaskComplete('${t.id}')">${t.status === 'concluido'?'&#10003;':''}</div>
+      <div class="task-body">
+        <div class="task-desc">${escapeHtml(t.description)}</div>
+        ${t.observacao ? `<div class="task-obs">&#128221; ${escapeHtml(t.observacao)}</div>` : ''}
+        <div class="task-meta">
+          <span class="task-status-badge" style="background:${st.color}22;color:${st.color}">${st.name}</span>
+          ${dateStr ? `<span class="task-date">Criada em ${dateStr}</span>` : ''}
+        </div>
+      </div>
+      <div class="task-actions">
+        <select title="Mudar status" onchange="setTaskStatus('${t.id}', this.value)">
+          ${TASK_STATUS.map(s => `<option value="${s.id}" ${s.id === t.status?'selected':''}>${s.name}</option>`).join('')}
+        </select>
+        <button title="Editar" onclick="editTask('${t.id}')">&#9998;</button>
+        <button class="task-del" title="Excluir" onclick="deleteTask('${t.id}')">&times;</button>
+      </div>
+    </div>
+  `;
+}
+
+function openTaskModal(regionId) {
+  document.getElementById('editTaskId').value = '';
+  document.getElementById('taskModalTitle').textContent = 'Nova Tarefa';
+  document.getElementById('taskDescription').value = '';
+  document.getElementById('taskObservacao').value = '';
+  document.getElementById('taskRegion').value = regionId || REGIONS[0].id;
+  document.getElementById('taskStatus').value = 'pendente';
+  document.getElementById('taskModalOverlay').classList.add('active');
+}
+
+function closeTaskModal() {
+  document.getElementById('taskModalOverlay').classList.remove('active');
+}
+
+function editTask(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('editTaskId').value = t.id;
+  document.getElementById('taskModalTitle').textContent = 'Editar Tarefa';
+  document.getElementById('taskDescription').value = t.description;
+  document.getElementById('taskObservacao').value = t.observacao || '';
+  document.getElementById('taskRegion').value = t.region;
+  document.getElementById('taskStatus').value = t.status;
+  document.getElementById('taskModalOverlay').classList.add('active');
+}
+
+function saveTask() {
+  const id = document.getElementById('editTaskId').value;
+  const description = document.getElementById('taskDescription').value.trim();
+  const observacao = document.getElementById('taskObservacao').value.trim();
+  const region = document.getElementById('taskRegion').value;
+  const status = document.getElementById('taskStatus').value;
+
+  if (!description) {
+    showToast('Descreva a tarefa!');
+    return;
+  }
+
+  if (id) {
+    const t = state.tasks.find(x => x.id === id);
+    if (t) {
+      t.description = description;
+      t.observacao = observacao;
+      t.region = region;
+      t.status = status;
+      t.updatedAt = new Date().toISOString();
+    }
+    showToast('Tarefa atualizada!');
+  } else {
+    state.tasks.push({
+      id: genId(),
+      description,
+      observacao,
+      region,
+      status,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+    showToast('Tarefa criada!');
+  }
+
+  saveState();
+  closeTaskModal();
+  renderTasks();
+}
+
+function deleteTask(id) {
+  if (!confirm('Excluir esta tarefa?')) return;
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  saveState();
+  renderTasks();
+  showToast('Tarefa excluida!');
+}
+
+function setTaskStatus(id, status) {
+  const t = state.tasks.find(x => x.id === id);
+  if (t) {
+    t.status = status;
+    t.updatedAt = new Date().toISOString();
+    saveState();
+    renderTasks();
+  }
+}
+
+function toggleTaskComplete(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (t) {
+    t.status = t.status === 'concluido' ? 'pendente' : 'concluido';
+    t.updatedAt = new Date().toISOString();
+    saveState();
+    renderTasks();
+  }
+}
+
+// ============ DRAG & DROP ============
+function onTeamDragStart(e, teamId) {
+  e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'new', teamId }));
+  e.dataTransfer.effectAllowed = 'copy';
+}
+
+function onEventDragStart(e, eventId) {
+  e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'move', eventId }));
+  e.dataTransfer.effectAllowed = 'move';
+  state.draggedEvent = eventId;
+}
+
+function onCellDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onCellDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onCellDrop(e, dateStr) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+
+  try {
+    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+
+    if (data.type === 'new') {
+      state.events.push({
+        id: genId(),
+        date: dateStr,
+        teamId: data.teamId,
+        region: REGIONS[0].id,
+        category: 'normal',
+        description: ''
+      });
+      saveState();
+      render();
+      showToast('Equipe agendada!');
+    } else if (data.type === 'move') {
+      const ev = state.events.find(ev => ev.id === data.eventId);
+      if (ev) {
+        ev.date = dateStr;
+        saveState();
+        render();
+        showToast('Agendamento movido!');
+      }
+    }
+  } catch(ex) {}
+
+  state.draggedEvent = null;
+}
+
+// ============ CONTEXT MENU ============
+function showContext(e, eventId) {
+  e.preventDefault();
+  e.stopPropagation();
+  state.contextEvent = eventId;
+  const menu = document.getElementById('contextMenu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('active');
+}
+
+function hideContext() {
+  document.getElementById('contextMenu').classList.remove('active');
+  state.contextEvent = null;
+}
+
+function editFromContext() {
+  hideContext();
+  if (state.contextEvent) openDetail(state.contextEvent);
+}
+
+function deleteFromContext() {
+  hideContext();
+  if (state.contextEvent) deleteEvent(state.contextEvent);
+}
+
+// ============ FILTERS ============
+function toggleRegion(id) {
+  const idx = state.activeRegions.indexOf(id);
+  if (idx >= 0) state.activeRegions.splice(idx, 1);
+  else state.activeRegions.push(id);
+  render();
+}
+
+function toggleTeamType(id) {
+  const idx = state.activeTeamTypes.indexOf(id);
+  if (idx >= 0) state.activeTeamTypes.splice(idx, 1);
+  else state.activeTeamTypes.push(id);
+  render();
+}
+
+function toggleCategory(id) {
+  const idx = state.activeCategories.indexOf(id);
+  if (idx >= 0) state.activeCategories.splice(idx, 1);
+  else state.activeCategories.push(id);
+  render();
+}
+
+// ============ TEAM PANEL TOGGLE ============
+function toggleTeamPanel() {
+  state.teamPanelOpen = !state.teamPanelOpen;
+  const body = document.getElementById('teamPanelBody');
+  const btn = document.getElementById('teamPanelToggle');
+  if (state.teamPanelOpen) {
+    body.classList.remove('collapsed');
+    btn.classList.remove('rotated');
+  } else {
+    body.classList.add('collapsed');
+    btn.classList.add('rotated');
+  }
+  saveState();
+}
+
+// ============ NAVIGATION ============
+function changeMonth(delta) {
+  state.currentDate.setMonth(state.currentDate.getMonth() + delta);
+  render();
+}
+
+function goToToday() {
+  state.currentDate = new Date();
+  render();
+}
+
+function formatDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+// ============ AUTH & BACKUP ============
+async function hashPassword(pw) {
+  if (window.crypto && crypto.subtle) {
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch(e) {}
+  }
+  let h = 5381;
+  for (let i = 0; i < pw.length; i++) {
+    h = ((h << 5) + h + pw.charCodeAt(i)) >>> 0;
+  }
+  return 'djb2_' + h.toString(16);
+}
+
+function getUsers() {
+  try {
+    const u = localStorage.getItem('ptp_users');
+    return u ? JSON.parse(u) : [];
+  } catch(ex) { return []; }
+}
+
+async function ensureDefaultUser() {
+  const users = getUsers();
+  if (users.length === 0) {
+    const hash = await hashPassword('admin');
+    localStorage.setItem('ptp_users', JSON.stringify([{ username: 'admin', hash }]));
+  }
+}
+
+function showLoginError(msg) {
+  document.getElementById('loginError').textContent = msg;
+}
+
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if (!u || !p) {
+    showLoginError('Informe usuario e senha!');
+    return;
+  }
+
+  const users = getUsers();
+  const user = users.find(x => x.username.toLowerCase() === u.toLowerCase());
+  if (!user) {
+    showLoginError('Usuario nao encontrado!');
+    return;
+  }
+
+  const hash = await hashPassword(p);
+  if (user.hash === hash || user.password === p) {
+    sessionStorage.setItem('ptp_session', user.username);
+    document.getElementById('loginOverlay').classList.remove('active');
+    document.getElementById('loginError').textContent = '';
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('userName').textContent = user.username;
+    showToast('Bem-vindo, ' + user.username + '!');
+    if (state.sync && state.sync.apiKey && state.sync.binId && state.sync.auto) {
+      await pullFromCloud(true);
+    }
+  } else {
+    showLoginError('Senha incorreta!');
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('ptp_session');
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginOverlay').classList.add('active');
+  showToast('Sessao encerrada.');
+}
+
+function openPwdModal() {
+  document.getElementById('pwdCurrent').value = '';
+  document.getElementById('pwdNew').value = '';
+  document.getElementById('pwdConfirm').value = '';
+  document.getElementById('pwdError').textContent = '';
+  document.getElementById('pwdModalOverlay').classList.add('active');
+}
+
+function closePwdModal() {
+  document.getElementById('pwdModalOverlay').classList.remove('active');
+}
+
+async function savePassword() {
+  const cur = document.getElementById('pwdCurrent').value;
+  const nw = document.getElementById('pwdNew').value;
+  const conf = document.getElementById('pwdConfirm').value;
+  const errEl = document.getElementById('pwdError');
+
+  const username = sessionStorage.getItem('ptp_session');
+  const users = getUsers();
+  const user = users.find(x => x.username === username);
+  if (!user) {
+    errEl.textContent = 'Sessao invalida. Faca login novamente.';
+    return;
+  }
+
+  const curHash = await hashPassword(cur);
+  if (user.hash !== curHash && user.password !== cur) {
+    errEl.textContent = 'Senha atual incorreta!';
+    return;
+  }
+  if (nw.length < 4) {
+    errEl.textContent = 'A nova senha deve ter ao menos 4 caracteres!';
+    return;
+  }
+  if (nw !== conf) {
+    errEl.textContent = 'As novas senhas nao conferem!';
+    return;
+  }
+
+  user.hash = await hashPassword(nw);
+  delete user.password;
+  localStorage.setItem('ptp_users', JSON.stringify(users));
+  closePwdModal();
+  showToast('Senha alterada com sucesso!');
+}
+
+function exportData() {
+  const data = {
+    app: 'PTP Cronograma',
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    teams: state.teams,
+    events: state.events,
+    tasks: state.tasks
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ptp-cronograma-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  showToast('Backup exportado com sucesso!');
+}
+
+function handleImport(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  importFile(file);
+  input.value = '';
+}
+
+function importFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data || typeof data !== 'object') throw new Error('invalid');
+
+      if (data.teams && Array.isArray(data.teams)) {
+        data.teams.forEach(t => { if (!t.id) t.id = genId(); if (!t.color) t.color = TEAM_COLORS[0]; if (!t.type) t.type = 'DEGRADAÇÃO'; });
+        state.teams = data.teams;
+      }
+      if (data.events && Array.isArray(data.events)) {
+        data.events.forEach(ev => { if (!ev.id) ev.id = genId(); });
+        const MIG = {
+          'SE_CAM': '61 - SE_CAM',
+          'SE_MPO': '233 - SE_MPO',
+          'SE_GOI': '62 - SE_GOYA',
+          'SE_XAV': '63 - SE_XAV'
+        };
+        data.events.forEach(ev => { if (MIG[ev.region]) ev.region = MIG[ev.region]; });
+        state.events = data.events;
+      }
+      if (data.tasks && Array.isArray(data.tasks)) {
+        data.tasks.forEach(t => { if (!t.id) t.id = genId(); if (!t.status) t.status = 'pendente'; });
+        state.tasks = data.tasks;
+      }
+
+      saveState();
+      render();
+      renderTasks();
+      updateTaskCount();
+      showToast('Dados importados com sucesso!');
+    } catch(ex) {
+      showToast('Arquivo invalido ou incompativel!');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ============ SYNC (payload, manual e cloud) ============
+function buildExportPayload() {
+  return JSON.stringify({
+    app: 'PTP Cronograma',
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    teams: state.teams,
+    events: state.events,
+    tasks: state.tasks,
+    regions: REGIONS
+  }, null, 2);
+}
+
+function applyDataPayload(data) {
+  if (!data || typeof data !== 'object') throw new Error('invalid');
+
+  if (data.teams && Array.isArray(data.teams)) {
+    data.teams.forEach(t => { if (!t.id) t.id = genId(); if (!t.color) t.color = TEAM_COLORS[0]; if (!t.type) t.type = 'DEGRADAÇÃO'; });
+    state.teams = data.teams;
+  }
+  if (data.events && Array.isArray(data.events)) {
+    data.events.forEach(ev => { if (!ev.id) ev.id = genId(); });
+    const MIG = {
+      'SE_CAM': '61 - SE_CAM',
+      'SE_MPO': '233 - SE_MPO',
+      'SE_GOI': '62 - SE_GOYA',
+      'SE_XAV': '63 - SE_XAV'
+    };
+    data.events.forEach(ev => { if (MIG[ev.region]) ev.region = MIG[ev.region]; });
+    state.events = data.events;
+  }
+  if (data.tasks && Array.isArray(data.tasks)) {
+    data.tasks.forEach(t => { if (!t.id) t.id = genId(); if (!t.status) t.status = 'pendente'; });
+    state.tasks = data.tasks;
+  }
+  if (data.regions && Array.isArray(data.regions) && data.regions.length > 0) {
+    REGIONS = data.regions;
+  }
+  const validRegions = REGIONS.map(r => r.id);
+  state.activeRegions = state.activeRegions.filter(id => validRegions.includes(id));
+  if (state.activeRegions.length === 0) state.activeRegions = validRegions;
+}
+
+function exportData() {
+  const blob = new Blob([buildExportPayload()], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ptp-cronograma-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  showToast('Backup exportado com sucesso!');
+}
+
+function handleImport(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  importFile(file);
+  input.value = '';
+}
+
+function importFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      applyDataPayload(data);
+      saveState();
+      render();
+      renderTasks();
+      updateTaskCount();
+      showToast('Dados importados com sucesso!');
+    } catch(ex) {
+      showToast('Arquivo invalido ou incompativel!');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// --- Sincronizacao manual (copiar/colar) ---
+function openSyncModal(mode) {
+  document.getElementById('syncModalOverlay').classList.add('active');
+  document.getElementById('syncText').value = mode === 'export' ? buildExportPayload() : '';
+}
+
+function closeSyncModal() {
+  document.getElementById('syncModalOverlay').classList.remove('active');
+}
+
+function copySyncText() {
+  const ta = document.getElementById('syncText');
+  ta.select();
+  ta.setSelectionRange(0, 99999);
+  let ok = false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value);
+      ok = true;
+    }
+  } catch(e) {}
+  if (!ok) {
+    try { ok = document.execCommand('copy'); } catch(e) {}
+  }
+  showToast(ok ? 'Dados copiados para a area de transferencia!' : 'Selecione e copie o texto com Ctrl+C');
+}
+
+function applySyncText() {
+  const txt = document.getElementById('syncText').value.trim();
+  if (!txt) {
+    showToast('Cole os dados antes de aplicar!');
+    return;
+  }
+  try {
+    const data = JSON.parse(txt);
+    applyDataPayload(data);
+    saveState();
+    render();
+    renderTasks();
+    updateTaskCount();
+    closeSyncModal();
+    showToast('Dados aplicados neste dispositivo!');
+  } catch(ex) {
+    showToast('Texto invalido. Verifique se copiou tudo.');
+  }
+}
+
+// --- Cloud (JSONBin) ---
+let cloudPushTimer = null;
+
+function scheduleCloudPush() {
+  if (!state.sync || !state.sync.apiKey || !state.sync.binId || !state.sync.auto) return;
+  clearTimeout(cloudPushTimer);
+  cloudPushTimer = setTimeout(() => pushToCloud(true), 2000);
+}
+
+function updateCloudStatus(message, type) {
+  const el = document.getElementById('syncStatusText');
+  if (!el) return;
+  el.className = 'sync-status ' + (type || '');
+  el.innerHTML = message || '';
+}
+
+function updateSidebarSyncStatus() {
+  const el = document.getElementById('syncSidebarStatus');
+  if (!el) return;
+  const on = state.sync && state.sync.apiKey && state.sync.binId;
+  el.innerHTML = on
+    ? '<span class="cloud-status-dot on"></span>Cloud: ativa' + (state.sync.auto ? ' (auto)' : '')
+    : '<span class="cloud-status-dot off"></span>Cloud: desativada';
+}
+
+function getCloudHeaders() {
+  return {
+    'X-Master-Key': state.sync.apiKey,
+    'Content-Type': 'application/json'
+  };
+}
+
+async function cloudRequest(method, path, body) {
+  const res = await fetch('https://api.jsonbin.io/v3/' + path, {
+    method,
+    headers: getCloudHeaders(),
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
+  return res.json();
+}
+
+function syncErr(msg) {
+  document.getElementById('syncError').textContent = msg || '';
+}
+
+async function saveSyncConfig() {
+  state.sync.apiKey = document.getElementById('syncApiKey').value.trim();
+  state.sync.auto = document.getElementById('syncAuto').checked;
+  localStorage.setItem('ptp_sync', JSON.stringify(state.sync));
+  saveState();
+  updateSidebarSyncStatus();
+  updateCloudStatus('Configuracao salva.', 'ok');
+  syncErr('');
+  showToast('Configuracao de cloud salva!');
+}
+
+async function createCloudBin() {
+  const key = document.getElementById('syncApiKey').value.trim();
+  if (!key) {
+    syncErr('Informe a X-Master-Key do jsonbin.io primeiro!');
+    return;
+  }
+  state.sync.apiKey = key;
+  state.sync.auto = document.getElementById('syncAuto').checked;
+  try {
+    const body = JSON.parse(buildExportPayload());
+    const res = await cloudRequest('POST', 'b', body);
+    state.sync.binId = res.metadata.id;
+    document.getElementById('syncBinId').value = res.metadata.id;
+    localStorage.setItem('ptp_sync', JSON.stringify(state.sync));
+    saveState();
+    updateSidebarSyncStatus();
+    updateCloudStatus('Cloud criada! Bin ID: <strong>' + res.metadata.id + '</strong>', 'ok');
+    syncErr('');
+    showToast('Cloud criada com sucesso!');
+  } catch(ex) {
+    syncErr('Falha ao criar cloud: ' + ex.message);
+  }
+}
+
+async function testCloudConnection() {
+  state.sync.apiKey = document.getElementById('syncApiKey').value.trim();
+  if (!state.sync.apiKey) {
+    syncErr('Informe a X-Master-Key!');
+    return;
+  }
+  if (!state.sync.binId) {
+    syncErr('Nenhum bin configurado. Clique em "Criar Cloud".');
+    return;
+  }
+  try {
+    await cloudRequest('GET', 'b/' + state.sync.binId);
+    updateCloudStatus('Conexao ok! Cloud acessivel.', 'ok');
+    syncErr('');
+  } catch(ex) {
+    syncErr('Falha na conexao: ' + ex.message);
+  }
+}
+
+async function pushToCloud(silent) {
+  if (!state.sync || !state.sync.apiKey || !state.sync.binId) {
+    if (!silent) syncErr('Cloud nao configurada. Preencha a chave e busque ou crie o bin.');
+    return;
+  }
+  try {
+    const body = JSON.parse(buildExportPayload());
+    await cloudRequest('PUT', 'b/' + state.sync.binId, body);
+    state.sync.lastSync = new Date().toISOString();
+    localStorage.setItem('ptp_sync', JSON.stringify(state.sync));
+    if (!silent) {
+      updateCloudStatus('Enviado para o cloud em ' + new Date().toLocaleTimeString(), 'ok');
+      showToast('Dados enviados para o cloud!');
+    }
+  } catch(ex) {
+    if (!silent) syncErr('Falha ao enviar: ' + ex.message);
+  }
+}
+
+async function pullFromCloud(silent) {
+  if (!state.sync || !state.sync.apiKey || !state.sync.binId) {
+    if (!silent) syncErr('Cloud nao configurada. Preencha a chave e busque ou crie o bin.');
+    return;
+  }
+  try {
+    const res = await cloudRequest('GET', 'b/' + state.sync.binId);
+    const data = res.record;
+    if (!data) throw new Error('bin vazio');
+    applyDataPayload(data);
+    state.sync.lastSync = new Date().toISOString();
+    localStorage.setItem('ptp_sync', JSON.stringify(state.sync));
+    saveState();
+    render();
+    renderTasks();
+    updateTaskCount();
+    updateSidebarSyncStatus();
+    if (!silent) {
+      updateCloudStatus('Dados baixados do cloud em ' + new Date().toLocaleTimeString(), 'ok');
+      showToast('Dados baixados do cloud!');
+    }
+  } catch(ex) {
+    if (!silent) syncErr('Falha ao baixar: ' + ex.message);
+  }
+}
+
+// ============ SETTINGS ============
+function openSettings() {
+  document.getElementById('newUsername').value = '';
+  document.getElementById('settingsCurrentPass').value = '';
+  document.getElementById('settingsNewPass').value = '';
+  document.getElementById('settingsConfirmPass').value = '';
+  document.getElementById('settingsError').textContent = '';
+  document.getElementById('syncApiKey').value = state.sync.apiKey || '';
+  document.getElementById('syncBinId').value = state.sync.binId || '';
+  document.getElementById('syncAuto').checked = state.sync.auto !== false;
+  updateSidebarSyncStatus();
+  document.getElementById('settingsOverlay').classList.add('active');
+  switchSettingsTab('regions');
+  renderSettingsRegions();
+}
+
+function openSettingsTab(tab) {
+  openSettings();
+  switchSettingsTab(tab);
+}
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('active');
+}
+
+function switchSettingsTab(tab) {
+  document.querySelectorAll('.settings-tab').forEach(b => b.classList.toggle('active', b.dataset.settingsTab === tab));
+  document.getElementById('settingsRegionsTab').style.display = tab === 'regions' ? 'block' : 'none';
+  document.getElementById('settingsAccountTab').style.display = tab === 'account' ? 'block' : 'none';
+  document.getElementById('settingsCloudTab').style.display = tab === 'cloud' ? 'block' : 'none';
+  if (tab === 'regions') renderSettingsRegions();
+  if (tab === 'cloud') {
+    document.getElementById('syncApiKey').value = state.sync.apiKey || '';
+    document.getElementById('syncBinId').value = state.sync.binId || '';
+    document.getElementById('syncAuto').checked = state.sync.auto !== false;
+    updateCloudStatus(
+      state.sync && state.sync.apiKey && state.sync.binId
+        ? 'Cloud configurada. Ultima sincronizacao: ' + (state.sync.lastSync ? new Date(state.sync.lastSync).toLocaleString() : 'nunca')
+        : 'Cloud ainda nao configurada.'
+    );
+  }
+}
+
+function renderSettingsRegions() {
+  const el = document.getElementById('regionsList');
+  el.innerHTML = REGIONS.map(r => {
+    const uses = state.events.filter(e => e.region === r.id).length + state.tasks.filter(t => t.region === r.id).length;
+    return `
+      <div class="region-item">
+        <div class="region-color-dot" style="background:${r.color}"></div>
+        <span class="region-name">${r.name}</span>
+        <span class="region-count">${uses} uso(s)</span>
+        <button title="Editar" onclick="editRegion('${r.id}')">&#9998;</button>
+        <button class="region-del" title="Excluir" onclick="deleteRegion('${r.id}')">&times;</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function editRegion(id) {
+  const r = REGIONS.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('editRegionId').value = id;
+  document.getElementById('editRegionName').value = r.name;
+  document.getElementById('editRegionColor').value = r.color;
+  document.getElementById('editRegionForm').style.display = 'block';
+  document.getElementById('addRegionForm').style.display = 'none';
+}
+
+function cancelRegionEdit() {
+  document.getElementById('editRegionForm').style.display = 'none';
+  document.getElementById('addRegionForm').style.display = 'block';
+}
+
+function addRegion() {
+  const name = document.getElementById('newRegionName').value.trim();
+  const color = document.getElementById('newRegionColor').value;
+  if (!name) {
+    showToast('Informe o nome da regiao!');
+    return;
+  }
+  if (REGIONS.find(r => r.id === name)) {
+    showToast('Essa regiao ja existe!');
+    return;
+  }
+  REGIONS.push({ id: name, name, color });
+  if (!state.activeRegions.includes(name)) state.activeRegions.push(name);
+  document.getElementById('newRegionName').value = '';
+  saveState();
+  render();
+  renderSettingsRegions();
+  showToast('Regiao adicionada!');
+}
+
+function saveRegionEdit() {
+  const oldId = document.getElementById('editRegionId').value;
+  const newName = document.getElementById('editRegionName').value.trim();
+  const newColor = document.getElementById('editRegionColor').value;
+  if (!newName) {
+    showToast('Informe o nome da regiao!');
+    return;
+  }
+
+  const r = REGIONS.find(x => x.id === oldId);
+  if (!r) return;
+
+  // Rename migration for events/tasks
+  state.events.forEach(e => { if (e.region === oldId) e.region = newName; });
+  state.tasks.forEach(t => { if (t.region === oldId) t.region = newName; });
+  state.activeRegions = state.activeRegions.map(id => id === oldId ? newName : id);
+
+  r.id = newName;
+  r.name = newName;
+  r.color = newColor;
+
+  cancelRegionEdit();
+  saveState();
+  render();
+  renderSettingsRegions();
+  showToast('Regiao atualizada!');
+}
+
+function deleteRegion(id) {
+  if (REGIONS.length <= 1) {
+    showToast('E necessario manter pelo menos uma regiao!');
+    return;
+  }
+
+  const uses = state.events.filter(e => e.region === id).length + state.tasks.filter(t => t.region === id).length;
+  if (uses > 0) {
+    const target = REGIONS.find(r => r.id !== id);
+    if (!confirm(`Ha ${uses} registro(s) nesta regiao. Deseja movelos para "${target.name}" e exclui-la?`)) return;
+    state.events.forEach(e => { if (e.region === id) e.region = target.id; });
+    state.tasks.forEach(t => { if (t.region === id) t.region = target.id; });
+  } else {
+    if (!confirm(`Excluir a regiao "${id}"?`)) return;
+  }
+
+  REGIONS = REGIONS.filter(r => r.id !== id);
+  state.activeRegions = state.activeRegions.filter(rid => rid !== id);
+
+  saveState();
+  render();
+  renderSettingsRegions();
+  showToast('Regiao excluida!');
+}
+
+function changeUsername() {
+  const newName = document.getElementById('newUsername').value.trim();
+  const errEl = document.getElementById('settingsError');
+  if (!newName) {
+    errEl.textContent = 'Informe um novo nome de usuario!';
+    return;
+  }
+
+  const username = sessionStorage.getItem('ptp_session');
+  const users = getUsers();
+  const user = users.find(x => x.username === username);
+  if (!user) {
+    errEl.textContent = 'Sessao invalida. Faca login novamente.';
+    return;
+  }
+  if (users.some(x => x.username.toLowerCase() === newName.toLowerCase())) {
+    errEl.textContent = 'Ja existe um usuario com esse nome!';
+    return;
+  }
+
+  user.username = newName;
+  localStorage.setItem('ptp_users', JSON.stringify(users));
+  sessionStorage.setItem('ptp_session', newName);
+  document.getElementById('userName').textContent = newName;
+  document.getElementById('newUsername').value = '';
+  errEl.textContent = '';
+  showToast('Nome de usuario alterado!');
+}
+
+async function changeSettingsPassword() {
+  const cur = document.getElementById('settingsCurrentPass').value;
+  const nw = document.getElementById('settingsNewPass').value;
+  const conf = document.getElementById('settingsConfirmPass').value;
+  const errEl = document.getElementById('settingsError');
+
+  const username = sessionStorage.getItem('ptp_session');
+  const users = getUsers();
+  const user = users.find(x => x.username === username);
+  if (!user) {
+    errEl.textContent = 'Sessao invalida. Faca login novamente.';
+    return;
+  }
+
+  const curHash = await hashPassword(cur);
+  if (user.hash !== curHash && user.password !== cur) {
+    errEl.textContent = 'Senha atual incorreta!';
+    return;
+  }
+  if (nw.length < 4) {
+    errEl.textContent = 'A nova senha deve ter ao menos 4 caracteres!';
+    return;
+  }
+  if (nw !== conf) {
+    errEl.textContent = 'As novas senhas nao conferem!';
+    return;
+  }
+
+  user.hash = await hashPassword(nw);
+  delete user.password;
+  localStorage.setItem('ptp_users', JSON.stringify(users));
+  document.getElementById('settingsCurrentPass').value = '';
+  document.getElementById('settingsNewPass').value = '';
+  document.getElementById('settingsConfirmPass').value = '';
+  errEl.textContent = '';
+  showToast('Senha alterada com sucesso!');
+}
+
+// ============ INIT ============
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.context-menu')) hideContext();
+  if (e.target.classList.contains('detail-overlay')) closeDetail();
+  if (e.target.id === 'modalOverlay') closeModal();
+  if (e.target.id === 'teamModalOverlay') closeTeamModal();
+  if (e.target.id === 'taskModalOverlay') closeTaskModal();
+  if (e.target.id === 'pwdModalOverlay') closePwdModal();
+  if (e.target.id === 'settingsOverlay') closeSettings();
+  if (e.target.id === 'syncModalOverlay') closeSyncModal();
+  if (e.target.id === 'dayExpandOverlay') closeDayExpand();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeTeamModal();
+    closeTaskModal();
+    closePwdModal();
+    closeSettings();
+    closeSyncModal();
+    closeDayExpand();
+    hideContext();
+    if (detailState.isEdit) {
+      detailState.isEdit = false;
+      renderDetail();
+    } else {
+      closeDetail();
+    }
+  }
+});
+
+(async () => {
+  await ensureDefaultUser();
+  const sessionUser = sessionStorage.getItem('ptp_session');
+  if (sessionUser) {
+    document.getElementById('loginOverlay').classList.remove('active');
+    document.getElementById('userName').textContent = sessionUser;
+    updateSidebarSyncStatus();
+    if (state.sync && state.sync.apiKey && state.sync.binId && state.sync.auto) {
+      await pullFromCloud(true);
+    }
+  } else {
+    document.getElementById('loginOverlay').classList.add('active');
+  }
+})();
+
+loadState();
+render();
+updateTaskCount();
+updateSidebarSyncStatus();
+</script>
+
+</body>
+</html>
