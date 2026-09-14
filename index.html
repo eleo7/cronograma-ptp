@@ -101,6 +101,8 @@
   .btn-primary:hover { background: #d63550; }
   .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); }
   .btn-secondary:hover { background: var(--bg-hover); }
+  .btn-danger { background: #c62828; color: white; }
+  .btn-danger:hover { background: #b71c1c; }
   .btn-sm { padding: 4px 10px; font-size: 0.78rem; }
 
   .main-layout {
@@ -1913,6 +1915,7 @@
         <button class="btn btn-secondary" onclick="testCloudConnection()">Testar Conexao</button>
         <button class="btn btn-secondary" onclick="pushToCloud()">Enviar Agora</button>
         <button class="btn btn-secondary" onclick="pullFromCloud()">Baixar Agora</button>
+        <button class="btn btn-danger" onclick="clearCloudSync()">Remover Cloud</button>
       </div>
 
       <div class="login-error" id="syncError"></div>
@@ -3405,6 +3408,7 @@ function syncErr(msg) {
 
 async function saveSyncConfig() {
   state.sync.apiKey = document.getElementById('syncApiKey').value.trim();
+  state.sync.binId = document.getElementById('syncBinId').value.trim();
   state.sync.auto = document.getElementById('syncAuto').checked;
   localStorage.setItem('ptp_sync', JSON.stringify(state.sync));
   saveState();
@@ -3412,6 +3416,21 @@ async function saveSyncConfig() {
   updateCloudStatus('Configuracao salva.', 'ok');
   syncErr('');
   showToast('Configuracao de cloud salva!');
+}
+
+function clearCloudSync() {
+  if (!confirm('Excluir a configuracao de cloud deste dispositivo? Os dados locais NAO serao apagados.')) return;
+  state.sync = { apiKey: '', binId: '', auto: true, lastSync: null };
+  localStorage.setItem('ptp_sync', JSON.stringify(state.sync));
+  localStorage.removeItem('ptp_sync');
+  saveState();
+  document.getElementById('syncApiKey').value = '';
+  document.getElementById('syncBinId').value = '';
+  document.getElementById('syncAuto').checked = true;
+  updateSidebarSyncStatus();
+  updateCloudStatus('Cloud removida deste dispositivo.', 'ok');
+  syncErr('');
+  showToast('Cloud removida deste dispositivo!');
 }
 
 async function createCloudBin() {
