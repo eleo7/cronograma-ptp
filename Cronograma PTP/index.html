@@ -1568,6 +1568,7 @@
   .week-table small { display:block; color:var(--text-secondary); margin-top:5px; }
   .dashboard-empty { text-align:center; padding:40px; color:var(--text-secondary); }
   @media(max-width:800px) { .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .dashboard { padding:14px; } .global-filters { padding:12px; } .tab-bar { padding:0; } .tab { padding:14px 10px; } .calendar-area { overflow:auto; } .calendar-grid,.calendar-header-row { min-width:700px; } .main-layout { flex-direction:column; } .sidebar { width:100%; min-width:0; max-height:300px; } }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
 </style>
 </head>
 <body>
@@ -1689,6 +1690,7 @@
 
   <!-- Calendar -->
   <div class="calendar-area">
+    <div style="padding:12px 0;display:flex;justify-content:flex-end"><button class="btn btn-secondary" onclick="openScheduleImport()">↥ Importar planilha</button></div>
     <div class="calendar-header-row">
       <div class="day-header">Dom</div>
       <div class="day-header">Seg</div>
@@ -1712,6 +1714,22 @@
     </div>
   </div>
   <div class="tasks-columns" id="tasksColumns"></div>
+</div>
+
+
+<div class="modal-overlay" id="scheduleImportOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="scheduleImportTitle" style="max-width:1050px;width:95%;max-height:90vh;overflow:auto;">
+    <h2 id="scheduleImportTitle">▦ Importar programação</h2>
+    <p class="dashboard-note">Importe Excel (.xlsx) ou CSV, até 5 MB. Colunas obrigatórias: EQUIPE, SE / REGIÃO e DATA DA PROGRAMAÇÃO (dia/mês/ano). Datas do Excel também são aceitas. Linhas incompletas são ignoradas, sem preencher células vazias.</p>
+    <p class="dashboard-note">Uma programação por equipe, região e dia. Repetições são ignoradas e os registros existentes, inclusive manuais, não são alterados. Novos agendamentos terão categoria Normal, descrição vazia e nenhuma verificação.</p>
+    <div class="form-group" style="margin-top:16px"><label for="scheduleImportFile">Arquivo</label><input id="scheduleImportFile" type="file" accept=".xlsx,.csv" onchange="readScheduleFile(this)"></div>
+    <div class="form-group"><label for="scheduleImportSheet">Aba da planilha</label><select id="scheduleImportSheet" onchange="previewScheduleSheet()"></select></div>
+    <div class="form-group"><label for="scheduleImportNewType">Tipo para equipes novas sem TIPO DA DEMANDA reconhecido</label><select id="scheduleImportNewType" onchange="previewScheduleSheet()"><option value="">Não criar: ignorar essas linhas</option><option value="PODA">PODA</option><option value="DEGRADAÇÃO">DEGRADAÇÃO</option></select></div>
+    <p class="dashboard-note">Equipes cadastradas serão reutilizadas. Para equipes novas, PODA ou DEGRADAÇÃO será lido de TIPO DA DEMANDA; se ausente, escolha um tipo acima. Regiões desconhecidas não serão criadas automaticamente.</p>
+    <p id="scheduleImportMessage" role="status" aria-live="polite" style="margin:16px 0"></p>
+    <div id="scheduleImportPreview"></div>
+    <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px"><button class="btn btn-secondary" onclick="closeScheduleImport()">Cancelar</button><button class="btn btn-primary" id="scheduleImportConfirm" onclick="confirmScheduleImport()" disabled>Confirmar importação</button></div>
+  </div>
 </div>
 
 <!-- Modal Agendamento -->
@@ -3932,5 +3950,6 @@ updateTaskCount();
 updateSidebarSyncStatus();
 </script>
 
+<script src="../assets/schedule-import.js"></script>
 </body>
 </html>
