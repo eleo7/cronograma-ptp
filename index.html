@@ -2223,7 +2223,7 @@ function renderCalendar() {
 const VERIFICATION_OPTIONS = [
   { id: 'ok', icon: '✓', label: 'Ok' },
   { id: 'incoerente', icon: '⚠', label: 'Incoerente' },
-  { id: 'improcedente', icon: '?', label: 'Improcedente' }
+  { id: 'improcedente', icon: '!', label: 'Improcedente' }
 ];
 function verificationBadge(value) {
   const option = VERIFICATION_OPTIONS.find(o => o.id === value);
@@ -2238,7 +2238,16 @@ function setVerification(input) {
   const item = state[collection].find(x => x.id === input.dataset.itemId);
   if (!item || !VERIFICATION_OPTIONS.some(o => o.id === input.value)) return;
   item.verification = input.checked ? input.value : '';
-  input.closest('fieldset').querySelectorAll('input').forEach(box => { box.checked = box.value === item.verification; });
+  document.querySelectorAll('.verification-box input').forEach(box => {
+    if (box.dataset.collection === collection && box.dataset.itemId === item.id) {
+      box.checked = box.value === item.verification;
+    }
+  });
+  if (collection === 'events') {
+    document.querySelectorAll('[data-verification-event]').forEach(badge => {
+      if (badge.dataset.verificationEvent === item.id) badge.innerHTML = verificationBadge(item.verification);
+    });
+  }
   saveState();
   if (collection === 'events') render();
 }
@@ -2729,6 +2738,8 @@ function renderDayExpand() {
             <span class="dex-region-badge" style="color:${region?region.color:'#aaa'};border-color:${region?region.color+'66':'#555'};background:${region?region.color+'22':'transparent'}">${region?region.name:'-'}</span>
             <span class="dex-cat-badge" style="color:${cat?cat.color:'#aaa'};border-color:${cat?cat.color+'66':'#555'};background:${cat?cat.color+'22':'transparent'}">${cat?cat.name:'-'}</span>
           </div>
+          <div data-verification-event="${escapeHtml(ev.id)}">${verificationBadge(ev.verification)}</div>
+          ${verificationControls(ev, 'events')}
           <div class="dex-desc ${ev.description?'':'empty'}">${ev.description?escapeHtml(ev.description):'Sem observacoes'}</div>
         </div>
         <div class="dex-actions">
