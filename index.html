@@ -1549,6 +1549,7 @@
   .global-filters { display:flex; flex-wrap:wrap; gap:12px; align-items:end; padding:16px 24px; background:var(--bg-secondary); border-bottom:1px solid var(--border); }
   .global-filters label { display:grid; gap:6px; font-size:.75rem; color:var(--text-secondary); }
   .global-filters input,.global-filters select,.dashboard-heading input { background:var(--bg-primary); border:1px solid var(--border); color:var(--text-primary); border-radius:8px; padding:10px; min-height:38px; }
+  .global-filters label[hidden] { display:none; }
   .filter-search { flex:1; min-width:210px; }
   .filter-result { color:var(--text-secondary); font-size:.8rem; padding:10px 0; }
   .dashboard { padding:24px; overflow:auto; }
@@ -2316,7 +2317,7 @@ function setVerification(input) {
 function workspaceMatch(item, isEvent = true) {
   const query = document.getElementById('filterSearch').value.trim().toLocaleLowerCase('pt-BR');
   const region = document.getElementById('filterRegion').value;
-  const verification = document.getElementById('filterVerification').value;
+  const verification = isEvent ? document.getElementById('filterVerification').value : '';
   const team = isEvent ? state.teams.find(t => t.id === item.teamId) : null;
   const text = [team?.name, item.description, item.observacao].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR');
   const status = VERIFICATION_OPTIONS.some(o => o.id === item.verification) ? item.verification : 'pending';
@@ -2878,6 +2879,7 @@ function deleteFromDayExpand(id) {
 // ============ TASKS ============
 function switchTab(name) {
   state.activeTab = name;
+  document.getElementById('filterVerification').closest('label').hidden = name === 'tarefas';
   document.getElementById('dashboardView').style.display = name === 'dashboard' ? 'block' : 'none';
   document.getElementById('calendarioView').style.display = name === 'calendario' ? 'flex' : 'none';
   document.getElementById('tarefasView').style.display = name === 'tarefas' ? 'flex' : 'none';
@@ -2954,7 +2956,6 @@ function renderTaskCard(t) {
       <div class="task-body">
         <div class="task-desc">${escapeHtml(t.description)}</div>
         ${t.observacao ? `<div class="task-obs">&#128221; ${escapeHtml(t.observacao)}</div>` : ''}
-        ${verificationControls(t, 'tasks')}
         <div class="task-meta">
           <span class="task-status-badge" style="background:${st.color}22;color:${st.color}">${st.name}</span>
           ${dateStr ? `<span class="task-date">Criada em ${dateStr}</span>` : ''}
