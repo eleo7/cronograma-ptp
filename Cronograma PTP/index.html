@@ -1515,6 +1515,17 @@
   @media (max-width: 900px) {
     .sidebar { width: 220px; min-width: 220px; }
   }
+
+  .verification-box { border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin: 10px 0; min-width: 0; }
+  .verification-box legend { font-size: .75rem; padding: 0 5px; }
+  .verification-options { display: flex; flex-wrap: wrap; gap: 8px; }
+  .verification-choice { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; border: 1px solid currentColor; border-radius: 6px; padding: 5px 8px; font-size: .75rem; }
+  .verification-choice:has(input:checked) { background: var(--verification-bg); font-weight: 700; }
+  .verification-ok { color: #4ade80; --verification-bg: #14532d; }
+  .verification-incoerente { color: #facc15; --verification-bg: #713f12; }
+  .verification-improcedente { color: #f87171; --verification-bg: #7f1d1d; }
+  .verification-choice input { accent-color: currentColor; }
+  .verification-badge { display: inline-block; font-size: .7rem; margin-top: 5px; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -2205,6 +2216,30 @@ function renderCalendar() {
   grid.innerHTML = cells;
 }
 
+
+const VERIFICATION_OPTIONS = [
+  { id: 'ok', icon: '✓', label: 'Ok' },
+  { id: 'incoerente', icon: '⚠', label: 'Incoerente' },
+  { id: 'improcedente', icon: '?', label: 'Improcedente' }
+];
+function verificationBadge(value) {
+  const option = VERIFICATION_OPTIONS.find(o => o.id === value);
+  return option ? `<span class="verification-badge verification-${option.id}">${option.icon} ${option.label}</span>` : '';
+}
+function verificationControls(item, collection) {
+  return `<fieldset class="verification-box"><legend>Verificação</legend><div class="verification-options">${VERIFICATION_OPTIONS.map(o => `<label class="verification-choice verification-${o.id}"><input type="checkbox" data-collection="${collection}" data-item-id="${escapeHtml(item.id)}" value="${o.id}" ${item.verification === o.id ? 'checked' : ''} onchange="setVerification(this)"><span aria-hidden="true">${o.icon}</span> ${o.label}</label>`).join('')}</div></fieldset>`;
+}
+function setVerification(input) {
+  const collection = input.dataset.collection;
+  if (!['events', 'tasks'].includes(collection)) return;
+  const item = state[collection].find(x => x.id === input.dataset.itemId);
+  if (!item || !VERIFICATION_OPTIONS.some(o => o.id === input.value)) return;
+  item.verification = input.checked ? input.value : '';
+  input.closest('fieldset').querySelectorAll('input').forEach(box => { box.checked = box.value === item.verification; });
+  saveState();
+  if (collection === 'events') render();
+}
+
 function buildCell(dateStr, dayNum, otherMonth, isToday) {
   const events = state.events.filter(e => {
     if (e.date !== dateStr) return false;
@@ -2234,6 +2269,7 @@ function buildCell(dateStr, dayNum, otherMonth, isToday) {
           ${region?region.name:''}${team && team.type ? `<span style="color:${typeColor};font-weight:600;"> &bull; ${team.type}</span>` : ''}
         </div>
         ${ev.description ? `<div class="ev-desc">${ev.description}</div>` : ''}
+        ${verificationBadge(ev.verification)}
       </div>
     `;
   }).join('');
@@ -2581,6 +2617,7 @@ function renderDetail() {
           </span>
         </div>
       </div>
+      ${verificationControls(ev, 'events')}
       <div class="detail-row">
         <div class="detail-label">Servico</div>
         <div class="detail-value detail-desc ${ev.description?'':'empty'}">${ev.description?escapeHtml(ev.description):'Sem descricao de servico'}</div>
@@ -2790,6 +2827,7 @@ function renderTaskCard(t) {
       <div class="task-body">
         <div class="task-desc">${escapeHtml(t.description)}</div>
         ${t.observacao ? `<div class="task-obs">&#128221; ${escapeHtml(t.observacao)}</div>` : ''}
+        ${verificationControls(t, 'tasks')}
         <div class="task-meta">
           <span class="task-status-badge" style="background:${st.color}22;color:${st.color}">${st.name}</span>
           ${dateStr ? `<span class="task-date">Criada em ${dateStr}</span>` : ''}
