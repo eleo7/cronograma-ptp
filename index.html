@@ -1722,10 +1722,9 @@
 <div class="modal-overlay" id="scheduleImportOverlay">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="scheduleImportTitle" style="max-width:1050px;width:95%;max-height:90vh;overflow:auto;">
     <h2 id="scheduleImportTitle">▦ Importar programação</h2>
-    <p class="dashboard-note">Importe Excel (.xlsx) ou CSV, até 5 MB. Colunas obrigatórias: EQUIPE, SE / REGIÃO e DATA DA PROGRAMAÇÃO (dia/mês/ano). Datas do Excel também são aceitas. Linhas incompletas são ignoradas, sem preencher células vazias.</p>
+    <p class="dashboard-note">Importe Excel (.xlsx) ou CSV, até 5 MB. A primeira aba será lida automaticamente. Colunas obrigatórias: EQUIPE, SE / REGIÃO e DATA DA PROGRAMAÇÃO (dia/mês/ano). Datas do Excel também são aceitas. Linhas incompletas são ignoradas, sem preencher células vazias.</p>
     <p class="dashboard-note">Uma programação por equipe, região e dia. Repetições são ignoradas e os registros existentes, inclusive manuais, não são alterados. Novos agendamentos terão categoria Normal, descrição vazia e nenhuma verificação.</p>
     <div class="form-group" style="margin-top:16px"><label for="scheduleImportFile">Arquivo</label><input id="scheduleImportFile" type="file" accept=".xlsx,.csv" onchange="readScheduleFile(this)"></div>
-    <div class="form-group"><label for="scheduleImportSheet">Aba da planilha</label><select id="scheduleImportSheet" onchange="previewScheduleSheet()"></select></div>
     <div class="form-group"><label for="scheduleImportNewType">Tipo para equipes novas sem TIPO DA DEMANDA reconhecido</label><select id="scheduleImportNewType" onchange="previewScheduleSheet()"><option value="">Não criar: ignorar essas linhas</option><option value="PODA">PODA</option><option value="DEGRADAÇÃO">DEGRADAÇÃO</option></select></div>
     <p class="dashboard-note">Equipes cadastradas serão reutilizadas. Para equipes novas, PODA ou DEGRADAÇÃO será lido de TIPO DA DEMANDA; se ausente, escolha um tipo acima. Regiões desconhecidas não serão criadas automaticamente.</p>
     <p id="scheduleImportMessage" role="status" aria-live="polite" style="margin:16px 0"></p>

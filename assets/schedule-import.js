@@ -15,7 +15,6 @@ function openScheduleImport() {
   if (importBusy) return;
   importSheets = []; importRows = [];
   document.getElementById('scheduleImportFile').value = '';
-  document.getElementById('scheduleImportSheet').innerHTML = '';
   document.getElementById('scheduleImportNewType').value = '';
   document.getElementById('scheduleImportPreview').innerHTML = '';
   document.getElementById('scheduleImportMessage').textContent = 'Selecione um arquivo para analisar. Nenhum dado será alterado antes da confirmação.';
@@ -52,7 +51,6 @@ async function readScheduleFile(input) {
   const message=document.getElementById('scheduleImportMessage');
   document.getElementById('scheduleImportConfirm').disabled=true;
   document.getElementById('scheduleImportPreview').innerHTML='';
-  document.getElementById('scheduleImportSheet').innerHTML='';
   message.textContent='Lendo planilha…';
   try {
     if(file.size>5*1024*1024)throw Error('O limite é 5 MB. Divida a planilha em arquivos menores.');
@@ -62,15 +60,26 @@ async function readScheduleFile(input) {
       importSheets=[{name:file.name,rows:parseScheduleCSV(text),date1904:false}];
     } else if(/\.xlsx$/i.test(file.name)) {
       await loadScheduleExcel();const workbook=new ExcelJS.Workbook();await workbook.xlsx.load(await file.arrayBuffer());
-      importSheets=workbook.worksheets.map(sheet=>{
-        if(sheet.rowCount>20000||sheet.columnCount>200)throw Error('Use no máximo 20.000 linhas e 200 colunas por aba.');
-        const rows=[];sheet.eachRow({includeEmpty:true},row=>rows.push(row.values.slice(1).map(importText)));
+      importSheets=workbook.worksheets.slice(0,1).map(sheet=>{
+        const rows=[];
+        sheet.eachRow(row=>{
+          const values=[];
+          row.eachCell((cell,column)=>{
+            const value=importText(cell.value);
+            if(value==null||String(value).trim()==='')return;
+            if(column>200)throw Error('Há dados além da coluna 200. Use uma planilha com até 200 colunas de dados.');
+            values[column-1]=value;
+          });
+          if(!values.length)return;
+          values.sourceLine=row.number;
+          rows.push(values);
+          if(rows.length>20000)throw Error('Use no máximo 20.000 linhas com dados. Células vazias ou apenas formatadas não são contadas.');
+        });
         return {name:sheet.name,rows,date1904:!!workbook.properties.date1904};
       });
     } else throw Error('Use Excel .xlsx ou CSV. Para arquivos .xls, salve como .xlsx no Excel.');
     if(!importSheets.length)throw Error('A planilha não contém abas.');
     if(importSheets.some(s=>s.rows.length>20000))throw Error('Use no máximo 20.000 linhas por aba.');
-    document.getElementById('scheduleImportSheet').innerHTML=importSheets.map((s,i)=>`<option value="${i}">${escapeHtml(s.name)}</option>`).join('');
   } catch(error) { importSheets=[];message.textContent=error.message || 'Não foi possível ler o arquivo.'; }
   finally { importBusy=false; }
   if(importSheets.length)previewScheduleSheet();
@@ -115,7 +124,7 @@ function buildSchedulePlan(rows,date1904=false) {
   for(let i=header+1;i<rows.length;i++) {
     const row=rows[i];if(!row.some(v=>String(v??'').trim()))continue;
     const name=String(importText(row[columns.team])??'').trim();const rawRegion=String(importText(row[columns.region])??'').trim();const rawDate=importText(row[columns.date]);
-    const entry={line:i+1,name,region:rawRegion,date:'',reason:''};report.push(entry);
+    const entry={line:row.sourceLine||i+1,name,region:rawRegion,date:'',reason:''};report.push(entry);
     if(!name||!rawRegion||rawDate==null||rawDate===''){entry.reason='Ignorada: campo obrigatório vazio';continue;}
     const date=scheduleDate(rawDate,date1904);if(!date){entry.reason='Ignorada: data inválida';continue;}entry.date=date;
     const region=scheduleRegion(rawRegion);if(!region){entry.reason='Ignorada: região não reconhecida';continue;}entry.region=region.name;
@@ -139,7 +148,7 @@ function previewScheduleSheet() {
   if(importBusy||!importSheets.length)return;
   document.getElementById('scheduleImportConfirm').disabled=true;
   document.getElementById('scheduleImportPreview').innerHTML='';
-  const sheet=importSheets[Number(document.getElementById('scheduleImportSheet').value)];
+  const sheet=importSheets[0];
   try {
     const plan=buildSchedulePlan(sheet.rows,sheet.date1904);importRows=sheet.rows;
     document.getElementById('scheduleImportMessage').textContent=`${plan.additions.length} programação(ões) para adicionar · ${plan.newTeams.size} equipe(s) nova(s) · ${plan.report.length-plan.additions.length} linha(s) ignorada(s). Nenhum registro existente será alterado.`;
@@ -149,7 +158,7 @@ function previewScheduleSheet() {
 }
 function confirmScheduleImport() {
   if(importBusy||!importRows.length)return;
-  const sheet=importSheets[Number(document.getElementById('scheduleImportSheet').value)];
+  const sheet=importSheets[0];
   // Recheck current data at confirmation, including records added after preview.
   const plan=buildSchedulePlan(importRows,sheet.date1904);
   if(!plan.additions.length){previewScheduleSheet();return;}
