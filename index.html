@@ -1528,6 +1528,47 @@
   .verification-improcedente { color: #f87171; --verification-bg: #7f1d1d; }
   .verification-choice input { accent-color: currentColor; }
   .verification-badge { display: inline-block; font-size: .7rem; margin-top: 5px; font-weight: 700; }
+
+  :root { --bg-primary:#0b1220; --bg-secondary:#111d30; --bg-card:#182941; --bg-hover:#233c59; --border:#2b3d55; --accent:#38bdf8; --text-primary:#edf4fc; --text-secondary:#a7b8cd; }
+  header { border-bottom:1px solid var(--border); box-shadow:0 4px 24px #0003; }
+  header h1 { letter-spacing:-.5px; }
+  .btn, .month-nav button { border-radius:8px; min-height:34px; transition:background .15s,box-shadow .15s; }
+  .btn-primary { color:#071827; font-weight:700; }
+  button:focus-visible,input:focus-visible,select:focus-visible { outline:2px solid #7dd3fc; outline-offset:3px; }
+  .tab-bar { background:var(--bg-secondary); padding:0 24px; }
+  .tab { padding:16px 22px; }
+  .sidebar { background:var(--bg-secondary); }
+  .sidebar-section h3 { letter-spacing:1px; }
+  .event-card { border-radius:8px; box-shadow:0 2px 5px #0002; padding:9px; }
+  .calendar-cell { min-height:145px; }
+  .calendar-cell.today { background:#38bdf80c; box-shadow:inset 0 0 0 1px #38bdf866; }
+  .task-card { border-radius:12px; padding:16px; box-shadow:0 4px 16px #0002; }
+  .task-col { border:1px solid var(--border); border-radius:14px; }
+  .task-col-header { padding:16px; }
+  .task-card.status-concluido { opacity:1; }
+  .global-filters { display:flex; flex-wrap:wrap; gap:12px; align-items:end; padding:16px 24px; background:var(--bg-secondary); border-bottom:1px solid var(--border); }
+  .global-filters label { display:grid; gap:6px; font-size:.75rem; color:var(--text-secondary); }
+  .global-filters input,.global-filters select,.dashboard-heading input { background:var(--bg-primary); border:1px solid var(--border); color:var(--text-primary); border-radius:8px; padding:10px; min-height:38px; }
+  .filter-search { flex:1; min-width:210px; }
+  .filter-result { color:var(--text-secondary); font-size:.8rem; padding:10px 0; }
+  .dashboard { padding:24px; overflow:auto; }
+  .dashboard-heading { display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px; align-items:center; margin-bottom:24px; }
+  .dashboard-heading p,.dashboard-note { color:var(--text-secondary); font-size:.85rem; margin-top:8px; line-height:1.6; }
+  .week-controls { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+  .metric-grid { display:grid; grid-template-columns:repeat(5,minmax(130px,1fr)); gap:14px; margin-bottom:24px; }
+  .metric { background:var(--bg-secondary); border:1px solid var(--border); border-radius:14px; padding:20px; }
+  .metric strong { display:block; font-size:2rem; margin-top:10px; }
+  .metric span { font-size:.8rem; }
+  .week-table-wrap { overflow:auto; border:1px solid var(--border); border-radius:14px; background:var(--bg-secondary); }
+  .week-table { border-collapse:collapse; width:100%; min-width:850px; }
+  .week-table th,.week-table td { padding:16px 12px; text-align:left; border-bottom:1px solid var(--border); }
+  .week-table th { color:var(--text-secondary); font-size:.75rem; background:#152238; }
+  .week-table td { font-size:.85rem; }
+  .week-table tr:last-child td { border-bottom:0; }
+  .week-table td .verification-badge { display:block; margin:4px 0; }
+  .week-table small { display:block; color:var(--text-secondary); margin-top:5px; }
+  .dashboard-empty { text-align:center; padding:40px; color:var(--text-secondary); }
+  @media(max-width:800px) { .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .dashboard { padding:14px; } .global-filters { padding:12px; } .tab-bar { padding:0; } .tab { padding:14px 10px; } .calendar-area { overflow:auto; } .calendar-grid,.calendar-header-row { min-width:700px; } .main-layout { flex-direction:column; } .sidebar { width:100%; min-width:0; max-height:300px; } }
 </style>
 </head>
 <body>
@@ -1553,9 +1594,25 @@
 </header>
 
 <div class="tab-bar">
-    <button class="tab active" data-tab="calendario" onclick="switchTab('calendario')">Cronograma</button>
-    <button class="tab" data-tab="tarefas" onclick="switchTab('tarefas')">Tarefas<span class="tab-count" id="taskCountBadge">0</span></button>
+<button class="tab" data-tab="dashboard" onclick="switchTab('dashboard')">▥ Dashboard</button>
+    <button class="tab active" data-tab="calendario" onclick="switchTab('calendario')">▦ Cronograma</button>
+    <button class="tab" data-tab="tarefas" onclick="switchTab('tarefas')">☑ Tarefas<span class="tab-count" id="taskCountBadge">0</span></button>
   </div>
+
+
+<section class="global-filters" aria-label="Filtros compartilhados">
+  <label class="filter-search">⌕ Buscar equipe ou descrição<input id="filterSearch" type="search" placeholder="Nome da equipe, serviço ou tarefa…" oninput="refreshWorkspace()"></label>
+  <label>Região<select id="filterRegion" onchange="refreshWorkspace()"><option value="">Todas as regiões</option></select></label>
+  <label>Verificação<select id="filterVerification" onchange="refreshWorkspace()"><option value="">Todas as verificações</option><option value="ok">✓ Ok</option><option value="incoerente">⚠ Incoerente</option><option value="improcedente">! Improcedente</option><option value="pending">○ Sem verificação</option></select></label>
+  <button class="btn btn-secondary" onclick="resetWorkspaceFilters()">↺ Limpar filtros</button>
+  <span class="filter-result" id="filterResult" role="status" aria-live="polite"></span>
+</section>
+<section id="dashboardView" class="dashboard" style="display:none" aria-label="Dashboard semanal">
+  <div class="dashboard-heading"><div><h2>▥ Visão semanal das equipes</h2><p id="weekLabel"></p></div><div class="week-controls"><button class="btn btn-secondary" onclick="moveDashboardWeek(-1)" aria-label="Semana anterior">‹</button><label>Semana de <input type="date" id="dashboardDate" onchange="renderDashboard()"></label><button class="btn btn-secondary" onclick="moveDashboardWeek(1)" aria-label="Próxima semana">›</button><button class="btn btn-secondary" onclick="dashboardToday()">Esta semana</button></div></div>
+  <div class="metric-grid" id="dashboardMetrics"></div>
+  <div id="dashboardTable"></div>
+  <p class="dashboard-note">Os indicadores contam agendamentos, não equipes únicas. Cada dia mostra todas as classificações dos serviços da equipe. Sem verificação significa que nenhuma classificação foi atribuída. Os filtros acima também se aplicam aqui; os filtros da barra lateral são exclusivos do cronograma.</p>
+</section>
 
 <div class="main-layout" id="calendarioView" style="display:flex;">
   <!-- Sidebar -->
@@ -2088,6 +2145,8 @@ function render() {
   renderCategoryFilters();
   renderCalendar();
   renderStats();
+  syncWorkspaceRegions();
+  refreshWorkspace();
 }
 
 function renderMonthLabel() {
@@ -2217,6 +2276,7 @@ function renderCalendar() {
   }
 
   grid.innerHTML = cells;
+  updateWorkspaceSummary();
 }
 
 
@@ -2252,9 +2312,61 @@ function setVerification(input) {
   if (collection === 'events') render();
 }
 
+
+function workspaceMatch(item, isEvent = true) {
+  const query = document.getElementById('filterSearch').value.trim().toLocaleLowerCase('pt-BR');
+  const region = document.getElementById('filterRegion').value;
+  const verification = document.getElementById('filterVerification').value;
+  const team = isEvent ? state.teams.find(t => t.id === item.teamId) : null;
+  const text = [team?.name, item.description, item.observacao].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR');
+  const status = VERIFICATION_OPTIONS.some(o => o.id === item.verification) ? item.verification : 'pending';
+  return (!query || text.includes(query)) && (!region || item.region === region) && (!verification || status === verification);
+}
+function syncWorkspaceRegions() {
+  const select = document.getElementById('filterRegion');
+  const previous = select.value;
+  select.innerHTML = '<option value="">Todas as regiões</option>' + REGIONS.map(r => `<option value="${escapeHtml(r.id)}">${escapeHtml(r.name)}</option>`).join('');
+  select.value = REGIONS.some(r => r.id === previous) ? previous : '';
+}
+function refreshWorkspace() {
+  renderCalendar(); renderTasks(); renderDashboard();
+  updateWorkspaceSummary();
+}
+function updateWorkspaceSummary() {
+  const tasks = state.activeTab === 'tarefas';
+  const count = tasks ? getFilteredTasks().length : state.events.filter(e => workspaceMatch(e) && e.date.startsWith(formatDate(state.currentDate).slice(0,7)) && state.activeRegions.includes(e.region) && state.activeCategories.includes(e.category) && state.activeTeamTypes.includes(state.teams.find(t=>t.id===e.teamId)?.type)).length;
+  document.getElementById('filterResult').textContent = state.activeTab === 'dashboard' ? 'Indicadores da semana selecionada' : `${count} ${tasks ? 'tarefa(s)' : 'agendamento(s) no mês'}`;
+}
+function resetWorkspaceFilters() {
+  ['filterSearch','filterRegion','filterVerification'].forEach(id => document.getElementById(id).value = '');
+  state.activeRegions = REGIONS.map(r=>r.id); state.activeTeamTypes = TEAM_TYPES.map(t=>t.id); state.activeCategories = CATEGORIES.map(c=>c.id); state.taskStatusFilter = 'all';
+  render(); refreshWorkspace();
+}
+function dashboardToday() { document.getElementById('dashboardDate').value = formatDate(new Date()); renderDashboard(); }
+function moveDashboardWeek(delta) {
+  const input = document.getElementById('dashboardDate');
+  const date = new Date(input.value + 'T12:00:00'); date.setDate(date.getDate()+delta*7); input.value = formatDate(date); renderDashboard();
+}
+function renderDashboard() {
+  const input = document.getElementById('dashboardDate');
+  if (!input.value) input.value = formatDate(new Date());
+  const start = new Date(input.value+'T12:00:00'); start.setDate(start.getDate()-((start.getDay()+6)%7));
+  const days = Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return formatDate(d)});
+  document.getElementById('weekLabel').textContent = `${formatDateBR(days[0])} a ${formatDateBR(days[6])} · Segunda a domingo`;
+  const events = state.events.filter(e=>days.includes(e.date)&&workspaceMatch(e));
+  const statuses = [...VERIFICATION_OPTIONS,{id:'pending',icon:'○',label:'Sem verificação'}];
+  const statusOf = e => VERIFICATION_OPTIONS.some(o=>o.id===e.verification)?e.verification:'pending';
+  const metric = (label,count,cls='')=>`<div class="metric ${cls}"><span>${label}</span><strong>${count}</strong></div>`;
+  document.getElementById('dashboardMetrics').innerHTML = metric('▦ Agendamentos',events.length)+statuses.map(s=>metric(`${s.icon} ${s.label}`,events.filter(e=>statusOf(e)===s.id).length,'verification-'+s.id)).join('');
+  const ids = [...new Set(events.map(e=>e.teamId))];
+  const teams = ids.map(id=>state.teams.find(t=>t.id===id)||{id,name:'Equipe removida',type:''}).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+  const rows = teams.map(team=>`<tr><td><strong>${escapeHtml(team.name)}</strong><small>${escapeHtml(team.type||'')}</small></td>${days.map(day=>{const items=events.filter(e=>e.teamId===team.id&&e.date===day);return `<td>${items.length?statuses.map(s=>{const count=items.filter(e=>statusOf(e)===s.id).length;return count?`<span class="verification-badge verification-${s.id}">${s.icon} ${s.label} · ${count}</span>`:''}).join(''):'<span aria-label="Sem agendamento">—</span>'}</td>`}).join('')}</tr>`).join('');
+  document.getElementById('dashboardTable').innerHTML = events.length?`<div class="week-table-wrap"><table class="week-table"><caption style="text-align:left;padding:16px">${teams.length} equipe(s) com agendamentos nesta seleção</caption><thead><tr><th scope="col">Equipe</th>${days.map((d,i)=>`<th scope="col">${['SEG','TER','QUA','QUI','SEX','SÁB','DOM'][i]}<br>${formatDateBR(d).slice(0,5)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="dashboard-empty">○ Nenhum agendamento nesta semana com os filtros selecionados.</div>';
+}
+
 function buildCell(dateStr, dayNum, otherMonth, isToday) {
   const events = state.events.filter(e => {
-    if (e.date !== dateStr) return false;
+    if (e.date !== dateStr || !workspaceMatch(e)) return false;
     if (!state.activeRegions.includes(e.region)) return false;
     if (!state.activeCategories.includes(e.category)) return false;
     const team = state.teams.find(t => t.id === e.teamId);
@@ -2766,10 +2878,11 @@ function deleteFromDayExpand(id) {
 // ============ TASKS ============
 function switchTab(name) {
   state.activeTab = name;
+  document.getElementById('dashboardView').style.display = name === 'dashboard' ? 'block' : 'none';
   document.getElementById('calendarioView').style.display = name === 'calendario' ? 'flex' : 'none';
   document.getElementById('tarefasView').style.display = name === 'tarefas' ? 'flex' : 'none';
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-  if (name === 'tarefas') renderTasks();
+  refreshWorkspace();
   hideContext();
 }
 
@@ -2782,11 +2895,11 @@ function renderTasks() {
   renderTaskStatusFilter();
   renderTaskColumns();
   updateTaskCount();
+  updateWorkspaceSummary();
 }
 
 function getFilteredTasks() {
-  if (state.taskStatusFilter === 'all') return state.tasks;
-  return state.tasks.filter(t => t.status === state.taskStatusFilter);
+  return state.tasks.filter(t => workspaceMatch(t, false) && (state.taskStatusFilter === 'all' || t.status === state.taskStatusFilter));
 }
 
 function renderTaskStatusFilter() {
